@@ -1,5 +1,7 @@
 # Machine do Bigorna 2.0 Ultra
 
+**Abrir agora:** https://abner-machado.github.io/machine-bigorna/
+
 Painel de finanças que roda em um arquivo só. Sem servidor, sem instalação, sem internet, sem conta.
 Você abre o `index.html` e ele funciona — no computador, no celular ou no tablet.
 
@@ -29,7 +31,7 @@ Escolha o jeito mais fácil para o seu aparelho.
 
 ### Pelo navegador, sem baixar nada
 
-Abra o endereço do painel publicado pelo GitHub Pages. Funciona em qualquer celular ou computador.
+Abra https://abner-machado.github.io/machine-bigorna/ — funciona em qualquer celular ou computador.
 Depois de abrir uma vez, ele continua funcionando mesmo sem internet, porque o arquivo fica no cache.
 
 ### No computador (Windows, Mac ou Linux)
@@ -46,14 +48,14 @@ Pronto. Nenhum programa a instalar.
 2. Abra o aplicativo **Arquivos**, vá em **Downloads** e toque no arquivo.
 3. Escolha abrir com o Chrome.
 
-Para virar ícone na tela inicial: abra o painel pelo endereço do GitHub Pages, toque nos três
+Para virar ícone na tela inicial: abra https://abner-machado.github.io/machine-bigorna/, toque nos três
 pontinhos do Chrome e escolha **Adicionar à tela inicial**.
 
 ### No iPhone ou iPad
 
 O iPhone não abre arquivo HTML solto direto do navegador. Faça assim:
 
-1. Abra o painel pelo endereço do GitHub Pages no Safari.
+1. Abra https://abner-machado.github.io/machine-bigorna/ no Safari.
 2. Toque no botão de compartilhar, o quadradinho com a seta para cima.
 3. Escolha **Adicionar à Tela de Início**.
 
