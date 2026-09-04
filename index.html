@@ -1,0 +1,2097 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Painel de finanças offline: DRE, fluxo de caixa, orçamento vs real, pista de decolagem, alertas e patrimônio. Um arquivo, sem servidor, sem internet.">
+<meta name="author" content="Abner Machado">
+<meta name="theme-color" content="#c8461b" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101216" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Machine do Bigorna 2.0 Ultra">
+<meta property="og:description" content="Painel de finanças que roda offline, em um arquivo só.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c8461b'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%23fff'%3E%E2%9A%92%3C/text%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Machine do Bigorna 2.0 Ultra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --ground:#f2f2f0;
+  --surface:#fcfcfb;
+  --surface-2:#f7f7f5;
+  --line:#dcdcd6;
+  --line-strong:#c3c3ba;
+  --ink:#14161a;
+  --ink-2:#4e5158;
+  --ink-3:#7d8089;
+  --accent:#c8461b;
+  --accent-ink:#ffffff;
+  --good:#0f7a43;
+  --good-bg:#e4f2e9;
+  --warn:#9a6a05;
+  --warn-bg:#f7eeda;
+  --bad:#b4342a;
+  --bad-bg:#f8e6e4;
+  --s1:#2a78d6;
+  --s2:#eb6834;
+  --s3:#1baf7a;
+  --s4:#eda100;
+  --s5:#e87ba4;
+  --s6:#4a3aa7;
+  --grid:#e6e6e0;
+  --shadow:0 1px 2px rgba(20,22,26,.06), 0 8px 24px -18px rgba(20,22,26,.5);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#101216;
+    --surface:#1a1d22;
+    --surface-2:#212429;
+    --line:#31353d;
+    --line-strong:#454a54;
+    --ink:#f4f5f7;
+    --ink-2:#b6bac2;
+    --ink-3:#868b95;
+    --accent:#f0703f;
+    --accent-ink:#1a1d22;
+    --good:#3fb46f;
+    --good-bg:#173026;
+    --warn:#d19a2b;
+    --warn-bg:#332a15;
+    --bad:#e56a5e;
+    --bad-bg:#361f1d;
+    --s1:#3987e5;
+    --s2:#d95926;
+    --s3:#199e70;
+    --s4:#c98500;
+    --s5:#d55181;
+    --s6:#9085e9;
+    --grid:#2a2e35;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#101216;
+  --surface:#1a1d22;
+  --surface-2:#212429;
+  --line:#31353d;
+  --line-strong:#454a54;
+  --ink:#f4f5f7;
+  --ink-2:#b6bac2;
+  --ink-3:#868b95;
+  --accent:#f0703f;
+  --accent-ink:#1a1d22;
+  --good:#3fb46f;
+  --good-bg:#173026;
+  --warn:#d19a2b;
+  --warn-bg:#332a15;
+  --bad:#e56a5e;
+  --bad-bg:#361f1d;
+  --s1:#3987e5;
+  --s2:#d95926;
+  --s3:#199e70;
+  --s4:#c98500;
+  --s5:#d55181;
+  --s6:#9085e9;
+  --grid:#2a2e35;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -20px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.num{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:"Archivo","IBM Plex Sans",sans-serif;text-wrap:balance;margin:0}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+
+/* ---------- chrome ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+}
+.topbar-in{
+  max-width:1320px;margin:0 auto;padding:12px 20px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.anvil{
+  width:30px;height:30px;flex:0 0 30px;border-radius:7px;
+  background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;font-size:15px;
+}
+.brand h1{font-size:16px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.brand .sub{font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.spacer{flex:1 1 auto}
+.headline-balance{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.headline-balance .v{font-size:19px;font-weight:600;letter-spacing:-.02em}
+.tabs{
+  max-width:1320px;margin:0 auto;padding:0 20px;
+  display:flex;gap:2px;overflow-x:auto;
+}
+.tab{
+  appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  padding:9px 13px;font:inherit;font-weight:500;color:var(--ink-2);
+  cursor:pointer;white-space:nowrap;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:4px}
+
+main{max-width:1320px;margin:0 auto;padding:18px 20px 60px}
+
+/* ---------- filters ---------- */
+.filters{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;margin-bottom:16px;
+}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+select,input[type="text"],input[type="date"],input[type="number"],textarea{
+  font:inherit;color:var(--ink);background:var(--surface-2);
+  border:1px solid var(--line-strong);border-radius:7px;padding:6px 9px;
+}
+select:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible{
+  outline:2px solid var(--accent);outline-offset:1px;
+}
+.btn{
+  font:inherit;font-weight:500;cursor:pointer;
+  background:var(--surface-2);color:var(--ink);
+  border:1px solid var(--line-strong);border-radius:7px;padding:6px 12px;
+}
+.btn:hover{border-color:var(--ink-3)}
+.btn-primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn-primary:hover{filter:brightness(1.06)}
+.chip-row{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  font:inherit;font-size:12px;cursor:pointer;padding:5px 10px;border-radius:99px;
+  background:var(--surface-2);border:1px solid var(--line-strong);color:var(--ink-2);
+}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+/* ---------- layout blocks ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:16px}
+.kpi{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:13px 15px;display:flex;flex-direction:column;gap:3px;
+}
+.kpi .v{font-size:23px;font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.kpi .foot{font-size:12px;color:var(--ink-3)}
+.kpi.lead{background:var(--surface-2);border-color:var(--line-strong)}
+.kpi.lead .eyebrow::after{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(12,1fr)}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:15px 16px 12px;min-width:0;
+}
+.card > header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
+.card h2{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.card .hint{font-size:12px;color:var(--ink-3)}
+.col-8{grid-column:span 8}
+.col-6{grid-column:span 6}
+.col-4{grid-column:span 4}
+.col-12{grid-column:span 12}
+@media (max-width:980px){.col-8,.col-6,.col-4{grid-column:span 12}}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+svg{display:block;width:100%;height:auto;overflow:visible}
+.scroll-x{overflow-x:auto}
+
+/* ---------- tables ---------- */
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{
+  text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line-strong);
+  white-space:nowrap;
+}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover{background:var(--surface-2)}
+.r{text-align:right;white-space:nowrap}
+.pos{color:var(--good)}
+.neg{color:var(--bad)}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:99px;white-space:nowrap;
+}
+.pill.ok{background:var(--good-bg);color:var(--good)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.bar-track{height:6px;border-radius:99px;background:var(--grid);overflow:hidden;min-width:80px}
+.bar-fill{height:100%;border-radius:99px}
+
+.tt{
+  position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;
+  box-shadow:var(--shadow);padding:8px 10px;font-size:12px;max-width:260px;
+}
+.tt .tt-t{font-weight:600;margin-bottom:4px}
+.tt .tt-r{display:flex;justify-content:space-between;gap:14px}
+.tt .tt-r span:last-child{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+.note{
+  font-size:12px;color:var(--ink-2);background:var(--surface-2);
+  border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+}
+textarea{width:100%;min-height:180px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.6}
+.hidden{display:none!important}
+.alert{
+  display:flex;gap:10px;align-items:flex-start;border-radius:9px;padding:10px 13px;
+  font-size:13px;border:1px solid;margin-bottom:12px;
+}
+.alert.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.alert.ok{background:var(--good-bg);border-color:var(--good);color:var(--good)}
+.dl{display:grid;grid-template-columns:1fr auto;gap:2px 16px;font-size:13px}
+.dl dt{color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--line)}
+.dl dd{margin:0;padding:6px 0;text-align:right;border-bottom:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.dl .strong dt,.dl .strong dd{font-weight:600;color:var(--ink);border-bottom-color:var(--line-strong)}
+.rodape{border-top:1px solid var(--line);background:var(--surface);margin-top:36px}
+.rodape-in{
+  max-width:1320px;margin:0 auto;padding:20px;
+  display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+}
+.assinatura{font-family:"Archivo",sans-serif;font-size:17px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.rodape-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.redes{display:flex;gap:16px;flex-wrap:wrap}
+.redes a{color:var(--ink-2);text-decoration:none;font-size:13px;border-bottom:1px solid var(--line-strong);padding-bottom:1px}
+.redes a:hover{color:var(--accent);border-bottom-color:var(--accent)}
+.redes a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+@media (max-width:640px){
+  .topbar-in{padding:10px 14px;gap:10px}
+  .brand h1{font-size:14px;white-space:normal}
+  main{padding:14px 14px 48px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:9px}
+  .kpi{padding:11px 12px}
+  .kpi .v{font-size:19px}
+  .filters{padding:10px}
+  .field{flex:1 1 130px}
+  table{font-size:12.5px}
+  th,td{padding:7px 8px}
+}
+@media print{
+  .topbar,.tabs,.filters,#txMais{display:none!important}
+  body{background:#fff}
+  .card,.kpi{break-inside:avoid;box-shadow:none;border-color:#c9c9c2}
+  main{padding:0;max-width:none}
+  section.hidden{display:none!important}
+}
+</style>
+
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="anvil" aria-hidden="true">⚒</div>
+      <div>
+        <h1>Machine do Bigorna 2.0 Ultra</h1>
+        <div class="sub" id="brandSub">dados de exemplo · troque pelo seu CSV</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="headline-balance">
+      <div class="eyebrow">Saldo em caixa</div>
+      <div class="v num" id="hdrBalance">—</div>
+    </div>
+  </div>
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" aria-selected="true" data-view="geral">Visão geral</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="cfo">Painel do dono</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="dre">Resultado (DRE)</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="caixa">Fluxo de caixa</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="pista">Pista de decolagem</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="orcamento">Orçamento vs real</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="alertas">Alertas</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="patrimonio">Patrimônio</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="transacoes">Lançamentos</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="dados">Meus dados</button>
+  </div>
+</div>
+
+<main>
+  <div class="filters" id="filters">
+    <div class="field">
+      <label for="fPeriodo">Período</label>
+      <select id="fPeriodo">
+        <option value="3">Últimos 3 meses</option>
+        <option value="6">Últimos 6 meses</option>
+        <option value="12" selected>Últimos 12 meses</option>
+        <option value="all">Tudo</option>
+        <option value="custom">Personalizado</option>
+      </select>
+    </div>
+    <div class="field hidden" id="wrapDe">
+      <label for="fDe">De</label>
+      <input type="date" id="fDe">
+    </div>
+    <div class="field hidden" id="wrapAte">
+      <label for="fAte">Até</label>
+      <input type="date" id="fAte">
+    </div>
+    <div class="field">
+      <label for="fCategoria">Categoria</label>
+      <select id="fCategoria"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="fConta">Conta</label>
+      <select id="fConta"><option value="">Todas</option></select>
+    </div>
+    <div class="field">
+      <label for="fTipo">Tipo</label>
+      <select id="fTipo">
+        <option value="">Entradas e saídas</option>
+        <option value="in">Só entradas</option>
+        <option value="out">Só saídas</option>
+      </select>
+    </div>
+    <div class="field" style="flex:1 1 200px">
+      <label for="fBusca">Busca</label>
+      <input type="text" id="fBusca" placeholder="descrição, categoria, conta…">
+    </div>
+    <button class="btn" id="btnLimpar" type="button">Limpar filtros</button>
+    <button class="btn" id="btnExportar" type="button">Baixar CSV</button>
+    <button class="btn" id="btnImprimir" type="button">Imprimir / PDF</button>
+  </div>
+
+  <!-- ================= VISÃO GERAL ================= -->
+  <section id="view-geral">
+    <div class="kpis" id="kpisGeral"></div>
+    <div class="grid">
+      <div class="card col-8">
+        <header>
+          <h2>Receita e despesa por mês</h2>
+          <span class="hint">valores em R$</span>
+        </header>
+        <div id="chartMensal"></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--s3)"></i>Receita</span>
+          <span><i class="swatch" style="background:var(--s2)"></i>Despesa</span>
+        </div>
+      </div>
+      <div class="card col-4">
+        <header><h2>Onde o dinheiro sai</h2><span class="hint">top 6</span></header>
+        <div id="chartCategorias"></div>
+      </div>
+      <div class="card col-12">
+        <header>
+          <h2>Saldo em caixa</h2>
+          <span class="hint">linha cheia = realizado · tracejada = projeção 3 meses</span>
+        </header>
+        <div id="chartSaldo"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DRE ================= -->
+  <section id="view-dre" class="hidden">
+    <div class="kpis" id="kpisDre"></div>
+    <div class="grid">
+      <div class="card col-6">
+        <header><h2 id="dreTitulo">Demonstrativo do mês</h2><span class="hint">real vs mês anterior vs orçado</span></header>
+        <div class="scroll-x"><table id="tblDre"></table></div>
+      </div>
+      <div class="card col-6">
+        <header><h2>Margem bruta e margem líquida</h2><span class="hint">% da receita, 12 meses</span></header>
+        <div id="chartMargens"></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--s1)"></i>Margem bruta</span>
+          <span><i class="swatch" style="background:var(--s6)"></i>Margem líquida</span>
+        </div>
+      </div>
+      <div class="card col-12">
+        <header><h2>Resultado mês a mês</h2><span class="hint">lucro líquido, 12 meses</span></header>
+        <div id="chartLucro"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FLUXO DE CAIXA ================= -->
+  <section id="view-caixa" class="hidden">
+    <div id="alertaCaixa"></div>
+    <div class="filters" style="margin-bottom:14px">
+      <div class="field">
+        <label for="fSaldoMin">Saldo mínimo de caixa (R$)</label>
+        <input type="number" id="fSaldoMin" value="15000" step="1000" min="0" style="width:150px">
+      </div>
+      <div class="field" style="justify-content:flex-end">
+        <span class="hint" style="font-size:12px;color:var(--ink-3)">A projeção usa a média dos últimos 3 meses de entradas e saídas.</span>
+      </div>
+    </div>
+    <div class="kpis" id="kpisCaixa"></div>
+    <div class="grid">
+      <div class="card col-7">
+        <header><h2 id="caixaTitulo">Movimento do mês</h2><span class="hint">do saldo inicial ao saldo final</span></header>
+        <dl class="dl" id="dlCaixa"></dl>
+      </div>
+      <div class="card col-5">
+        <header><h2>Maiores drenos de caixa</h2><span class="hint">no período filtrado</span></header>
+        <div class="scroll-x"><table id="tblDrenos"></table></div>
+      </div>
+      <div class="card col-12">
+        <header><h2>Previsão de caixa</h2><span class="hint">próximos 3 meses</span></header>
+        <div class="scroll-x"><table id="tblPrevisao"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ORÇAMENTO ================= -->
+  <section id="view-orcamento" class="hidden">
+    <div class="kpis" id="kpisOrc"></div>
+    <div class="grid">
+      <div class="card col-12">
+        <header>
+          <h2 id="orcTitulo">Orçamento vs real por categoria</h2>
+          <span class="hint">verde até 85% · amarelo até 100% · vermelho estourou</span>
+        </header>
+        <div class="scroll-x"><table id="tblOrcamento"></table></div>
+      </div>
+      <div class="card col-7">
+        <header><h2>Gasto mensal vs orçamento total</h2><span class="hint">12 meses</span></header>
+        <div id="chartOrcMensal"></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--s2)"></i>Gasto real</span>
+          <span><i class="swatch" style="background:var(--line-strong)"></i>Orçamento do mês</span>
+        </div>
+      </div>
+      <div class="card col-5">
+        <header><h2>Maiores estouros</h2><span class="hint">mês corrente</span></header>
+        <div class="scroll-x"><table id="tblEstouros"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PAINEL DO DONO (CFO) ================= -->
+  <section id="view-cfo" class="hidden">
+    <div class="kpis" id="kpisCfo"></div>
+    <div class="grid">
+      <div class="card col-7">
+        <header><h2 id="cfoTitulo">Comparação do mês</h2><span class="hint">mês anterior · trimestre anterior · meta</span></header>
+        <div class="scroll-x"><table id="tblCfo"></table></div>
+      </div>
+      <div class="card col-5">
+        <header><h2>Resumo em três pontos</h2><span class="hint">calculado a partir dos seus números</span></header>
+        <div id="resumoCfo"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PISTA DE DECOLAGEM ================= -->
+  <section id="view-pista" class="hidden">
+    <div id="alertaPista"></div>
+    <div class="filters" style="margin-bottom:14px">
+      <div class="field"><label for="pCaixa">Caixa hoje (R$)</label><input type="number" id="pCaixa" step="1000" style="width:130px"></div>
+      <div class="field"><label for="pReceita">Receita mensal (R$)</label><input type="number" id="pReceita" step="500" style="width:130px"></div>
+      <div class="field"><label for="pFolha">Folha e pró-labore (R$)</label><input type="number" id="pFolha" step="500" style="width:140px"></div>
+      <div class="field"><label for="pOutros">Outros custos (R$)</label><input type="number" id="pOutros" step="500" style="width:130px"></div>
+      <div class="field"><label for="pCresc">Crescimento da receita (% ao mês)</label><input type="number" id="pCresc" step="0.5" style="width:150px"></div>
+      <button class="btn" id="btnPistaReset" type="button">Recalcular pelo CSV</button>
+    </div>
+    <div class="kpis" id="kpisPista"></div>
+    <div class="grid">
+      <div class="card col-12">
+        <header>
+          <h2>Projeção de caixa em 12 meses</h2>
+          <span class="hint">três cenários sobre os números acima</span>
+        </header>
+        <div id="chartCenarios"></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--s1)"></i>Cenário base</span>
+          <span><i class="swatch" style="background:var(--s3)"></i>Melhor caso</span>
+          <span><i class="swatch" style="background:var(--s2)"></i>Pior caso</span>
+        </div>
+      </div>
+      <div class="card col-12">
+        <header><h2>Mês a mês, cenário base</h2><span class="hint">até acabar o caixa ou completar 12 meses</span></header>
+        <div class="scroll-x"><table id="tblPista"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ALERTAS ================= -->
+  <section id="view-alertas" class="hidden">
+    <div class="card" style="margin-bottom:14px">
+      <header><h2>O que os números estão dizendo</h2><span class="hint">tudo com valor e variação, nada de conselho genérico</span></header>
+      <p class="note" style="margin-top:10px">
+        Cada alerta abaixo nasce de uma regra de cálculo sobre os seus lançamentos: gasto fora do padrão
+        (acima da média mais duas vezes o desvio), receita em queda, custo crescendo rápido, mês de maior
+        e de menor lucro, e risco de caixa. Se um alerta não aparece, é porque a conta não bateu o limite.
+      </p>
+    </div>
+    <div id="listaAlertas"></div>
+  </section>
+
+  <!-- ================= PATRIMÔNIO ================= -->
+  <section id="view-patrimonio" class="hidden">
+    <div class="kpis" id="kpisPatr"></div>
+    <div class="grid">
+      <div class="card col-6">
+        <header><h2>O que você tem</h2><span class="hint">edite os valores</span></header>
+        <div id="formBens"></div>
+      </div>
+      <div class="card col-6">
+        <header><h2>O que você deve</h2><span class="hint">edite os valores</span></header>
+        <div id="formDividas"></div>
+      </div>
+      <div class="card col-6">
+        <header><h2>Composição dos bens</h2><span class="hint">fatia de cada tipo</span></header>
+        <div id="chartBens"></div>
+      </div>
+      <div class="card col-6">
+        <header><h2>Composição das dívidas</h2><span class="hint">fatia de cada tipo</span></header>
+        <div id="chartDividas"></div>
+      </div>
+      <div class="card col-12">
+        <header><h2>Quanto sobra por mês</h2><span class="hint">entradas menos saídas do período filtrado</span></header>
+        <div id="chartPoupanca"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TRANSAÇÕES ================= -->
+  <section id="view-transacoes" class="hidden">
+    <div class="kpis" id="kpisTx"></div>
+    <div class="card">
+      <header>
+        <h2>Lançamentos</h2>
+        <span class="hint" id="txCount">—</span>
+      </header>
+      <div class="scroll-x" style="max-height:620px;overflow-y:auto">
+        <table id="tblTx"></table>
+      </div>
+      <div id="txMais" style="margin-top:12px;text-align:center"></div>
+    </div>
+  </section>
+
+  <!-- ================= DADOS ================= -->
+  <section id="view-dados" class="hidden">
+    <div class="grid">
+      <div class="card col-7">
+        <header><h2>Cole o seu CSV</h2><span class="hint">separador vírgula ou ponto e vírgula</span></header>
+        <p class="note" style="margin:10px 0">
+          Cabeçalho esperado: <strong>DATE, DESCRIPTION, CATEGORY, INCOME, EXPENSE, ACCOUNT, BALANCE</strong>.
+          Também aceita os nomes em português (DATA, DESCRICAO, CATEGORIA, ENTRADA, SAIDA, CONTA, SALDO).
+          A coluna BALANCE é opcional — se faltar, o saldo é recalculado a partir do saldo inicial.
+          Valores aceitam <span class="num">1.234,56</span> ou <span class="num">1234.56</span>.
+        </p>
+        <label class="eyebrow" for="csvIn">CSV</label>
+        <textarea id="csvIn" spellcheck="false" aria-label="CSV de lançamentos"></textarea>
+        <div class="chip-row" style="margin-top:10px">
+          <button class="btn btn-primary" id="btnCarregar" type="button">Carregar esse CSV</button>
+          <button class="btn" id="btnArquivo" type="button">Abrir arquivo…</button>
+          <input type="file" id="fileIn" accept=".csv,text/csv,text/plain" class="hidden">
+          <button class="btn" id="btnExemplo" type="button">Restaurar exemplo</button>
+          <button class="btn" id="btnBaixar" type="button">Copiar CSV atual</button>
+        </div>
+        <div id="csvMsg" style="margin-top:10px"></div>
+      </div>
+      <div class="card col-5">
+        <header><h2>Como o painel classifica</h2><span class="hint">editável no CSV</span></header>
+        <p class="note" style="margin:10px 0">
+          Cada categoria entra num bloco do DRE e do fluxo de caixa. Categoria que o painel não conhece
+          cai em <strong>Despesas operacionais</strong>. Para mudar, renomeie a categoria no seu CSV
+          usando um dos nomes abaixo.
+        </p>
+        <div class="scroll-x"><table id="tblMapa"></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+  <footer class="rodape">
+    <div class="rodape-in">
+      <div>
+        <div class="eyebrow">Feito por</div>
+        <div class="assinatura">Abner Machado</div>
+        <div class="rodape-sub">Painel offline. Seus números não saem do seu aparelho.</div>
+      </div>
+      <nav class="redes" aria-label="Redes sociais">
+        <a href="https://github.com/Abner-Machado" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://x.com/Fezrix" target="_blank" rel="noopener">X</a>
+        <a href="https://www.instagram.com/abner_hiller/" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.youtube.com/@Fezrix" target="_blank" rel="noopener">YouTube · Fezrix</a>
+        <a href="https://www.youtube.com/@Uabnermachado" target="_blank" rel="noopener">YouTube · Abner Machado</a>
+      </nav>
+    </div>
+  </footer>
+
+<div class="tt" id="tt" role="status" aria-live="polite"></div>
+
+<script>
+/* =======================================================================
+   1. DADOS DE EXEMPLO
+   Micro-empresa de serviço digital, 14 meses, 2 contas.
+   Troque tudo pela aba "Meus dados" — nada aqui é necessário para o painel.
+   ======================================================================= */
+const SALDO_INICIAL = 18400;
+
+/* categoria -> bloco. receita | cmv | operacional | imposto | divida | investimento | outras */
+const MAPA = {
+  "Serviços":"receita", "Assinaturas":"receita", "Licenciamento":"receita", "Consultoria":"receita",
+  "Infraestrutura":"cmv", "Freelancers":"cmv", "Licenças de software":"cmv",
+  "Pró-labore":"operacional", "Aluguel":"operacional", "Energia":"operacional",
+  "Internet":"operacional", "Marketing":"operacional", "Contabilidade":"operacional",
+  "Equipamentos":"investimento", "Reserva":"investimento",
+  "DAS Simples":"imposto", "ISS":"imposto",
+  "Empréstimo":"divida", "Cartão PJ":"divida",
+  "Tarifas bancárias":"outras"
+};
+
+/* orçamento mensal por categoria de despesa (R$) */
+const ORCAMENTO = {
+  "Infraestrutura":2600, "Freelancers":4800, "Licenças de software":1300,
+  "Pró-labore":9000, "Aluguel":2400, "Energia":520, "Internet":260,
+  "Marketing":2200, "Contabilidade":720, "Equipamentos":1200,
+  "DAS Simples":2900, "ISS":900, "Empréstimo":1850, "Cartão PJ":2400,
+  "Tarifas bancárias":140, "Reserva":2000
+};
+
+/* gerador determinístico do exemplo */
+function geraExemplo(){
+  let seed = 20260904;
+  const rnd = () => (seed = (seed*1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const jitter = (base, pct) => Math.round(base * (1 + (rnd()*2-1)*pct));
+  const receitas = [
+    ["Serviços","Projeto — landing institucional", 14200, .26],
+    ["Serviços","Sprint de manutenção",             6400, .22],
+    ["Assinaturas","Plano mensal — 14 clientes",    9800, .10],
+    ["Consultoria","Mentoria técnica",              3100, .35],
+    ["Licenciamento","Royalties de componente",     1550, .30]
+  ];
+  const despesas = [
+    ["Infraestrutura","VPS + storage + CDN",        2450, .12],
+    ["Freelancers","Design e copy sob demanda",     4600, .30],
+    ["Licenças de software","Ferramentas do time",  1280, .08],
+    ["Pró-labore","Pró-labore do mês",              9000, .00],
+    ["Aluguel","Sala comercial",                    2400, .00],
+    ["Energia","Conta de luz",                       510, .18],
+    ["Internet","Link dedicado",                     260, .00],
+    ["Marketing","Anúncios e conteúdo",             2100, .40],
+    ["Contabilidade","Honorários contábeis",         720, .00],
+    ["DAS Simples","Simples Nacional",              2850, .15],
+    ["ISS","ISS sobre serviços",                     880, .20],
+    ["Empréstimo","Parcela capital de giro",        1850, .00],
+    ["Cartão PJ","Fatura cartão PJ",                2300, .28],
+    ["Tarifas bancárias","Tarifas e TED",            135, .25]
+  ];
+  const linhas = [];
+  const hoje = new Date(2026, 8, 30);
+  for(let m = 13; m >= 0; m--){
+    const ref = new Date(hoje.getFullYear(), hoje.getMonth()-m, 1);
+    const ano = ref.getFullYear(), mes = ref.getMonth();
+    const diasNoMes = new Date(ano, mes+1, 0).getDate();
+    const sazonal = 1 + Math.sin((mes+1)/12*Math.PI*2)*0.12;
+    receitas.forEach((r,i) => {
+      if(r[0]==="Consultoria" && rnd() < .35) return;
+      const dia = Math.min(diasNoMes, 4 + i*5 + Math.floor(rnd()*4));
+      linhas.push({
+        data:new Date(ano,mes,dia), desc:r[1], cat:r[0],
+        inn:jitter(r[2]*sazonal, r[3]), out:0,
+        conta: r[0]==="Assinaturas" ? "Conta PJ" : "Conta PJ"
+      });
+    });
+    despesas.forEach((d,i) => {
+      const dia = Math.min(diasNoMes, 2 + i*2 + Math.floor(rnd()*3));
+      linhas.push({
+        data:new Date(ano,mes,dia), desc:d[1], cat:d[0],
+        inn:0, out:jitter(d[2], d[3]), conta:"Conta PJ"
+      });
+    });
+    if(m % 3 === 0){
+      linhas.push({data:new Date(ano,mes,Math.min(diasNoMes,20)), desc:"Aporte na reserva",
+        cat:"Reserva", inn:0, out:2000, conta:"Reserva"});
+    }
+    if(m === 9 || m === 4){
+      linhas.push({data:new Date(ano,mes,Math.min(diasNoMes,17)), desc:"Notebook para edição",
+        cat:"Equipamentos", inn:0, out:m===9?5400:3200, conta:"Conta PJ"});
+    }
+  }
+  linhas.sort((a,b) => a.data - b.data);
+  let saldo = SALDO_INICIAL;
+  const head = "DATE,DESCRIPTION,CATEGORY,INCOME,EXPENSE,ACCOUNT,BALANCE";
+  const rows = linhas.map(l => {
+    saldo += l.inn - l.out;
+    return [iso(l.data), l.desc, l.cat, l.inn||"", l.out||"", l.conta, saldo].join(",");
+  });
+  return head + "\n" + rows.join("\n");
+}
+
+/* =======================================================================
+   2. UTILIDADES
+   ======================================================================= */
+const brl = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+const brl2 = new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:2});
+const pct = n => (n*100).toFixed(1).replace(".",",") + "%";
+const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function iso(d){ return d.toISOString().slice(0,10); }
+function mesKey(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"); }
+function mesLabel(k){ const [a,m] = k.split("-"); return MESES[+m-1] + "/" + a.slice(2); }
+function dataBR(d){ return String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear(); }
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function bloco(cat){ return MAPA[cat] || "operacional"; }
+function num(v){
+  if(v == null) return 0;
+  let s = String(v).trim().replace(/[R$\s]/g,"");
+  if(!s) return 0;
+  if(s.includes(",") && s.includes(".")) s = s.replace(/\./g,"").replace(",",".");
+  else if(s.includes(",")) s = s.replace(",",".");
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+/* CSV parser: aspas, vírgula ou ponto e vírgula */
+function parseCSV(texto){
+  const t = texto.replace(/\r\n?/g,"\n").trim();
+  if(!t) throw new Error("CSV vazio.");
+  const primeira = t.slice(0, t.indexOf("\n") < 0 ? t.length : t.indexOf("\n"));
+  const sep = (primeira.split(";").length > primeira.split(",").length) ? ";" : ",";
+  const linhas = [];
+  let campo = "", linha = [], aspas = false;
+  for(let i = 0; i < t.length; i++){
+    const c = t[i];
+    if(aspas){
+      if(c === '"' && t[i+1] === '"'){ campo += '"'; i++; }
+      else if(c === '"') aspas = false;
+      else campo += c;
+    } else if(c === '"') aspas = true;
+    else if(c === sep){ linha.push(campo); campo = ""; }
+    else if(c === "\n"){ linha.push(campo); linhas.push(linha); linha = []; campo = ""; }
+    else campo += c;
+  }
+  linha.push(campo); linhas.push(linha);
+
+  const cab = linhas.shift().map(h => h.trim().toLowerCase().replace(/[^a-z]/g,""));
+  const acha = (...nomes) => { for(const n of nomes){ const i = cab.indexOf(n); if(i >= 0) return i; } return -1; };
+  const iData = acha("date","data","dt");
+  const iDesc = acha("description","descricao","descrio","historico","histrico");
+  const iCat  = acha("category","categoria");
+  const iIn   = acha("income","entrada","receita","credito","crdito");
+  const iOut  = acha("expense","saida","sada","despesa","debito","dbito");
+  const iCon  = acha("account","conta");
+  const iSal  = acha("balance","saldo");
+  if(iData < 0) throw new Error("Não achei a coluna de data (DATE ou DATA).");
+  if(iIn < 0 && iOut < 0) throw new Error("Não achei nem INCOME nem EXPENSE.");
+
+  const out = [];
+  linhas.forEach(l => {
+    if(!l.length || l.every(c => !String(c).trim())) return;
+    const bruta = String(l[iData]||"").trim();
+    let d = null;
+    let mBR = bruta.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    let mISO = bruta.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(mISO) d = new Date(+mISO[1], +mISO[2]-1, +mISO[3]);
+    else if(mBR) d = new Date(mBR[3].length === 2 ? 2000 + +mBR[3] : +mBR[3], +mBR[2]-1, +mBR[1]);
+    if(!d || isNaN(d)) return;
+    out.push({
+      data: d,
+      desc: (l[iDesc] || "—").trim(),
+      cat:  (l[iCat] || "Sem categoria").trim(),
+      inn:  iIn  >= 0 ? Math.abs(num(l[iIn]))  : 0,
+      out:  iOut >= 0 ? Math.abs(num(l[iOut])) : 0,
+      conta:(iCon >= 0 ? (l[iCon] || "Principal").trim() : "Principal"),
+      saldoCSV: iSal >= 0 ? num(l[iSal]) : null
+    });
+  });
+  if(!out.length) throw new Error("Nenhuma linha com data válida.");
+  out.sort((a,b) => a.data - b.data);
+  return out;
+}
+
+/* =======================================================================
+   3. ESTADO
+   ======================================================================= */
+const S = {
+  todas: [],
+  csv: "",
+  view: "geral",
+  saldoAbertura: SALDO_INICIAL,
+  f: { periodo:"12", de:null, ate:null, cat:"", conta:"", tipo:"", busca:"" },
+  saldoMin: 15000,
+  txTeto: 250,
+  pistaEditada: false
+};
+
+function carregar(csvTexto, origem){
+  const linhas = parseCSV(csvTexto);
+  const primeiro = linhas[0];
+  S.saldoAbertura = (primeiro.saldoCSV != null)
+    ? primeiro.saldoCSV - primeiro.inn + primeiro.out
+    : SALDO_INICIAL;
+  let acc = S.saldoAbertura;
+  linhas.forEach(l => { acc += l.inn - l.out; l.saldo = (l.saldoCSV != null) ? l.saldoCSV : acc; });
+  S.todas = linhas;
+  S.csv = csvTexto.trim();
+  document.getElementById("brandSub").textContent =
+    origem === "exemplo"
+      ? "dados de exemplo · troque pelo seu CSV"
+      : linhas.length + " lançamentos carregados do seu CSV";
+  preencheSelects();
+  render();
+}
+
+function preencheSelects(){
+  const cats = [...new Set(S.todas.map(l => l.cat))].sort((a,b) => a.localeCompare(b,"pt-BR"));
+  const contas = [...new Set(S.todas.map(l => l.conta))].sort((a,b) => a.localeCompare(b,"pt-BR"));
+  const sc = document.getElementById("fCategoria"), so = document.getElementById("fConta");
+  sc.innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option>${esc(c)}</option>`).join("");
+  so.innerHTML = '<option value="">Todas</option>' + contas.map(c => `<option>${esc(c)}</option>`).join("");
+  sc.value = S.f.cat; so.value = S.f.conta;
+  const fim = S.todas[S.todas.length-1].data, ini = S.todas[0].data;
+  document.getElementById("fDe").value = iso(ini);
+  document.getElementById("fAte").value = iso(fim);
+}
+
+/* recorte pelo filtro */
+function filtradas(){
+  const { periodo, de, ate, cat, conta, tipo, busca } = S.f;
+  let ini = null, fim = null;
+  if(S.todas.length){
+    fim = S.todas[S.todas.length-1].data;
+    if(periodo === "custom"){
+      ini = de ? new Date(de + "T00:00:00") : S.todas[0].data;
+      fim = ate ? new Date(ate + "T23:59:59") : fim;
+    } else if(periodo === "all"){
+      ini = S.todas[0].data;
+    } else {
+      ini = new Date(fim.getFullYear(), fim.getMonth() - (+periodo - 1), 1);
+    }
+  }
+  const q = busca.trim().toLowerCase();
+  return S.todas.filter(l => {
+    if(ini && l.data < ini) return false;
+    if(fim && l.data > fim) return false;
+    if(cat && l.cat !== cat) return false;
+    if(conta && l.conta !== conta) return false;
+    if(tipo === "in" && !l.inn) return false;
+    if(tipo === "out" && !l.out) return false;
+    if(q && !(l.desc + " " + l.cat + " " + l.conta).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+/* agregação mensal */
+function porMes(linhas){
+  const m = new Map();
+  linhas.forEach(l => {
+    const k = mesKey(l.data);
+    if(!m.has(k)) m.set(k, {k, receita:0, cmv:0, operacional:0, imposto:0, divida:0,
+                            investimento:0, outras:0, entrada:0, saida:0, saldoFim:null});
+    const o = m.get(k), b = bloco(l.cat);
+    o.entrada += l.inn; o.saida += l.out;
+    if(l.inn) o.receita += l.inn;
+    if(l.out) o[b === "receita" ? "operacional" : b] += l.out;
+    o.saldoFim = l.saldo;
+  });
+  return [...m.values()].sort((a,b) => a.k.localeCompare(b.k));
+}
+
+/* =======================================================================
+   4. GRÁFICOS (SVG à mão, com hover)
+   ======================================================================= */
+const tt = document.getElementById("tt");
+function mostraTT(ev, titulo, linhas){
+  tt.innerHTML = `<div class="tt-t">${esc(titulo)}</div>` +
+    linhas.map(([a,b]) => `<div class="tt-r"><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join("");
+  tt.style.opacity = "1";
+  const r = tt.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - 10;
+  if(x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if(y + r.height > innerHeight - 8) y = innerHeight - r.height - 8;
+  tt.style.left = x + "px"; tt.style.top = Math.max(8, y) + "px";
+}
+function escondeTT(){ tt.style.opacity = "0"; }
+
+function eixoY(max, passos){
+  const bruto = max / passos;
+  const mag = Math.pow(10, Math.floor(Math.log10(bruto || 1)));
+  const passo = Math.ceil(bruto / mag) * mag;
+  const topo = passo * passos;
+  return { topo, ticks: Array.from({length:passos+1}, (_,i) => i*passo) };
+}
+function kBRL(v){
+  const a = Math.abs(v);
+  if(a >= 1000000) return (v/1000000).toFixed(1).replace(".",",") + "M";
+  if(a >= 1000) return Math.round(v/1000) + "k";
+  return String(Math.round(v));
+}
+
+/* barras agrupadas: receita x despesa */
+function barrasMensais(el, dados){
+  if(!dados.length){ el.innerHTML = vazio(); return; }
+  const W = 860, H = 300, ml = 54, mr = 12, mt = 12, mb = 34;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const max = Math.max(...dados.map(d => Math.max(d.entrada, d.saida)), 1);
+  const { topo, ticks } = eixoY(max, 4);
+  const passo = iw / dados.length;
+  const bw = Math.min(20, passo * 0.32);
+  const y = v => mt + ih - (v / topo) * ih;
+  let g = "";
+  ticks.forEach(t => {
+    g += `<line x1="${ml}" x2="${W-mr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)" stroke-width="1"/>` +
+         `<text x="${ml-8}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${kBRL(t)}</text>`;
+  });
+  dados.forEach((d,i) => {
+    const cx = ml + passo*i + passo/2;
+    const x1 = cx - bw - 1, x2 = cx + 1;
+    [["entrada", x1, "var(--s3)"], ["saida", x2, "var(--s2)"]].forEach(([campo, x, cor]) => {
+      const v = d[campo], h = Math.max(1, (v/topo)*ih);
+      g += `<rect class="hit" data-k="${d.k}" x="${x}" y="${mt+ih-h}" width="${bw}" height="${h}" rx="3" fill="${cor}"/>`;
+    });
+    if(dados.length <= 14 || i % 2 === 0){
+      g += `<text x="${cx}" y="${H-14}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${mesLabel(d.k)}</text>`;
+    }
+  });
+  g += `<line x1="${ml}" x2="${W-mr}" y1="${mt+ih}" y2="${mt+ih}" stroke="var(--line-strong)" stroke-width="1"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Receita e despesa por mês">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("mousemove", ev => {
+      const d = dados.find(x => x.k === r.dataset.k);
+      mostraTT(ev, mesLabel(d.k), [
+        ["Receita", brl.format(d.entrada)],
+        ["Despesa", brl.format(d.saida)],
+        ["Resultado", brl.format(d.entrada - d.saida)]
+      ]);
+    });
+    r.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+/* barras horizontais com marcador de orçamento */
+function barrasCategoria(el, itens){
+  if(!itens.length){ el.innerHTML = vazio(); return; }
+  const cores = ["var(--s1)","var(--s2)","var(--s3)","var(--s4)","var(--s5)","var(--s6)"];
+  const max = Math.max(...itens.map(i => Math.max(i.valor, i.orc || 0)), 1);
+  el.innerHTML = itens.map((it,i) => {
+    const w = (it.valor / max) * 100;
+    const ow = it.orc ? (it.orc / max) * 100 : null;
+    return `<div class="cat-row" data-i="${i}" style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:9px 0;cursor:default">
+      <div style="font-size:12.5px;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.cat)}</div>
+      <div class="num" style="font-size:12.5px;font-weight:500">${brl.format(it.valor)}</div>
+      <div style="grid-column:1/-1;position:relative;height:9px;background:var(--grid);border-radius:99px">
+        <div style="position:absolute;inset:0 auto 0 0;width:${w}%;background:${cores[i%6]};border-radius:99px"></div>
+        ${ow != null ? `<div title="orçamento" style="position:absolute;top:-3px;bottom:-3px;left:${Math.min(ow,100)}%;width:2px;background:var(--ink-2);border-radius:2px"></div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".cat-row").forEach(row => {
+    const it = itens[+row.dataset.i];
+    row.addEventListener("mousemove", ev => {
+      const l = [["Gasto", brl2.format(it.valor)], ["Fatia", pct(it.share)]];
+      if(it.orc) l.push(["Orçamento", brl2.format(it.orc)], ["Variação", brl2.format(it.valor - it.orc)]);
+      mostraTT(ev, it.cat, l);
+    });
+    row.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+/* linha de saldo com projeção */
+function linhaSaldo(el, reais, proj, saldoMin){
+  const pts = reais.concat(proj);
+  if(pts.length < 2){ el.innerHTML = vazio(); return; }
+  const W = 1180, H = 280, ml = 58, mr = 16, mt = 14, mb = 34;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const vals = pts.map(p => p.v).concat([saldoMin, 0]);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max - min) || 1;
+  const lo = min - span*0.12, hi = max + span*0.12;
+  const x = i => ml + (iw * i) / (pts.length - 1);
+  const y = v => mt + ih - ((v - lo) / (hi - lo)) * ih;
+  let g = "";
+  for(let t = 0; t <= 4; t++){
+    const v = lo + (hi - lo) * t/4;
+    g += `<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>` +
+         `<text x="${ml-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${kBRL(v)}</text>`;
+  }
+  g += `<line x1="${ml}" x2="${W-mr}" y1="${y(saldoMin)}" y2="${y(saldoMin)}" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g += `<text x="${W-mr}" y="${y(saldoMin)-7}" text-anchor="end" font-size="11" fill="var(--bad)" font-weight="600">saldo mínimo ${kBRL(saldoMin)}</text>`;
+  const dReal = reais.map((p,i) => (i ? "L" : "M") + x(i) + " " + y(p.v)).join(" ");
+  g += `<path d="${dReal} L ${x(reais.length-1)} ${mt+ih} L ${ml} ${mt+ih} Z" fill="var(--s1)" opacity=".10"/>`;
+  g += `<path d="${dReal}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  if(proj.length){
+    const dProj = [reais[reais.length-1]].concat(proj)
+      .map((p,i) => (i ? "L" : "M") + x(reais.length-1+i) + " " + y(p.v)).join(" ");
+    g += `<path d="${dProj}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-dasharray="6 5" opacity=".75" stroke-linecap="round"/>`;
+    proj.forEach((p,i) => {
+      const abaixo = p.v < saldoMin;
+      g += `<circle cx="${x(reais.length+i)}" cy="${y(p.v)}" r="4.5" fill="var(--surface)" stroke="${abaixo?"var(--bad)":"var(--s1)"}" stroke-width="2"/>`;
+    });
+  }
+  const ult = reais[reais.length-1];
+  g += `<circle cx="${x(reais.length-1)}" cy="${y(ult.v)}" r="5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/>`;
+  pts.forEach((p,i) => {
+    if(i % Math.ceil(pts.length/12) === 0 || i === pts.length-1){
+      g += `<text x="${x(i)}" y="${H-13}" text-anchor="middle" font-size="11" fill="${p.proj?"var(--ink-3)":"var(--ink-3)"}">${mesLabel(p.k)}</text>`;
+    }
+    g += `<rect class="hit" data-i="${i}" x="${x(i)-iw/(pts.length-1)/2}" y="${mt}" width="${iw/(pts.length-1)}" height="${ih}" fill="transparent"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo em caixa por mês, com projeção">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("mousemove", ev => {
+      const p = pts[+r.dataset.i];
+      mostraTT(ev, mesLabel(p.k) + (p.proj ? " · projetado" : ""), [
+        ["Saldo", brl.format(p.v)],
+        ["Mínimo", brl.format(saldoMin)],
+        ["Folga", brl.format(p.v - saldoMin)]
+      ]);
+    });
+    r.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+/* linhas de percentual (margens) */
+function linhasPercentuais(el, dados, series){
+  if(dados.length < 2){ el.innerHTML = vazio(); return; }
+  const W = 620, H = 260, ml = 46, mr = 14, mt = 14, mb = 32;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const todos = dados.flatMap(d => series.map(s => d[s.campo]));
+  const lo = Math.min(0, Math.min(...todos)), hi = Math.max(...todos, 0.1);
+  const x = i => ml + (iw * i) / (dados.length - 1);
+  const y = v => mt + ih - ((v - lo) / ((hi - lo) || 1)) * ih;
+  let g = "";
+  for(let t = 0; t <= 4; t++){
+    const v = lo + (hi - lo) * t/4;
+    g += `<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>` +
+         `<text x="${ml-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${Math.round(v*100)}%</text>`;
+  }
+  if(lo < 0) g += `<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line-strong)" stroke-width="1.5"/>`;
+  series.forEach(s => {
+    const d = dados.map((p,i) => (i ? "L" : "M") + x(i) + " " + y(p[s.campo])).join(" ");
+    g += `<path d="${d}" fill="none" stroke="${s.cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const ultimo = dados.length - 1;
+    g += `<circle cx="${x(ultimo)}" cy="${y(dados[ultimo][s.campo])}" r="4.5" fill="${s.cor}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  dados.forEach((d,i) => {
+    if(i % Math.ceil(dados.length/8) === 0 || i === dados.length-1)
+      g += `<text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${mesLabel(d.k)}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="${x(i)-iw/(dados.length-1)/2}" y="${mt}" width="${iw/(dados.length-1)}" height="${ih}" fill="transparent"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Margens por mês">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("mousemove", ev => {
+      const d = dados[+r.dataset.i];
+      mostraTT(ev, mesLabel(d.k), series.map(s => [s.nome, pct(d[s.campo])]));
+    });
+    r.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+/* barras com sinal (lucro) */
+function barrasSinal(el, dados, campo){
+  if(!dados.length){ el.innerHTML = vazio(); return; }
+  const W = 1180, H = 240, ml = 58, mr = 14, mt = 16, mb = 30;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const vals = dados.map(d => d[campo]);
+  const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+  const span = (hi - lo) || 1;
+  const y = v => mt + ih - ((v - lo) / span) * ih;
+  const passo = iw / dados.length, bw = Math.min(34, passo*0.6);
+  let g = `<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line-strong)" stroke-width="1.5"/>`;
+  [lo, lo+span/2, hi].forEach(v => {
+    g += `<text x="${ml-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${kBRL(v)}</text>`;
+  });
+  dados.forEach((d,i) => {
+    const v = d[campo], cx = ml + passo*i + passo/2;
+    const yy = v >= 0 ? y(v) : y(0);
+    const h = Math.max(1, Math.abs(y(v) - y(0)));
+    g += `<rect class="hit" data-i="${i}" x="${cx-bw/2}" y="${yy}" width="${bw}" height="${h}" rx="3" fill="${v>=0?"var(--good)":"var(--bad)"}"/>`;
+    g += `<text x="${cx}" y="${H-11}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${mesLabel(d.k)}</text>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Lucro líquido por mês">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("mousemove", ev => {
+      const d = dados[+r.dataset.i];
+      mostraTT(ev, mesLabel(d.k), [
+        ["Lucro líquido", brl.format(d.lucroLiq)],
+        ["Receita", brl.format(d.receita)],
+        ["Margem", d.receita ? pct(d.lucroLiq/d.receita) : "—"]
+      ]);
+    });
+    r.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+/* gasto mensal x orçamento */
+function barrasOrcamento(el, dados, orcMensal){
+  if(!dados.length){ el.innerHTML = vazio(); return; }
+  const W = 700, H = 270, ml = 54, mr = 14, mt = 14, mb = 32;
+  const iw = W - ml - mr, ih = H - mt - mb;
+  const max = Math.max(...dados.map(d => d.saida), orcMensal, 1);
+  const { topo, ticks } = eixoY(max, 4);
+  const passo = iw / dados.length, bw = Math.min(26, passo*0.55);
+  const y = v => mt + ih - (v/topo)*ih;
+  let g = "";
+  ticks.forEach(t => {
+    g += `<line x1="${ml}" x2="${W-mr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>` +
+         `<text x="${ml-8}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${kBRL(t)}</text>`;
+  });
+  dados.forEach((d,i) => {
+    const cx = ml + passo*i + passo/2, h = Math.max(1,(d.saida/topo)*ih);
+    const estourou = d.saida > orcMensal;
+    g += `<rect class="hit" data-i="${i}" x="${cx-bw/2}" y="${mt+ih-h}" width="${bw}" height="${h}" rx="3" fill="${estourou?"var(--s2)":"var(--s1)"}"/>`;
+    if(dados.length <= 14 || i % 2 === 0)
+      g += `<text x="${cx}" y="${H-11}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${mesLabel(d.k)}</text>`;
+  });
+  g += `<line x1="${ml}" x2="${W-mr}" y1="${y(orcMensal)}" y2="${y(orcMensal)}" stroke="var(--line-strong)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  g += `<text x="${W-mr}" y="${y(orcMensal)-7}" text-anchor="end" font-size="11" fill="var(--ink-2)" font-weight="600">orçamento ${kBRL(orcMensal)}</text>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gasto mensal contra o orçamento">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("mousemove", ev => {
+      const d = dados[+r.dataset.i];
+      mostraTT(ev, mesLabel(d.k), [
+        ["Gasto", brl.format(d.saida)],
+        ["Orçamento", brl.format(orcMensal)],
+        ["Variação", brl.format(d.saida - orcMensal)]
+      ]);
+    });
+    r.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+function vazio(){
+  return `<div style="padding:40px 10px;text-align:center;color:var(--ink-3);font-size:13px">
+    Nenhum lançamento no recorte atual. Afrouxe os filtros.</div>`;
+}
+
+/* =======================================================================
+   5. RENDER
+   ======================================================================= */
+function kpi(rotulo, valor, rodape, classe){
+  return `<div class="kpi ${classe||""}">
+    <div class="eyebrow">${esc(rotulo)}</div>
+    <div class="v num">${valor}</div>
+    <div class="foot">${rodape||""}</div>
+  </div>`;
+}
+
+/* Máquina fraca: recalcula uma vez e desenha SÓ a aba aberta.
+   As outras abas ficam marcadas como sujas e só são desenhadas quando abertas. */
+const CACHE = { linhas:[], meses:[], sujo:{} };
+const VIEWS = ["geral","cfo","dre","caixa","pista","orcamento","alertas","patrimonio","transacoes","dados"];
+const PINTA = {
+  geral:      () => renderGeral(CACHE.linhas, CACHE.meses),
+  cfo:        () => renderCfo(CACHE.meses),
+  dre:        () => renderDre(CACHE.meses),
+  caixa:      () => renderCaixa(CACHE.linhas, CACHE.meses),
+  pista:      () => renderPista(),
+  orcamento:  () => renderOrcamento(CACHE.linhas, CACHE.meses),
+  alertas:    () => renderAlertas(CACHE.linhas, CACHE.meses),
+  patrimonio: () => renderPatrimonio(CACHE.meses),
+  transacoes: () => renderTx(CACHE.linhas),
+  dados:      () => renderMapa()
+};
+
+function recalcula(){
+  CACHE.linhas = filtradas();
+  CACHE.meses = porMes(CACHE.linhas);
+  CACHE.meses.forEach(m => {
+    m.lucroBruto = m.receita - m.cmv;
+    m.despOper = m.operacional + m.outras;
+    m.lucroOper = m.lucroBruto - m.despOper;
+    m.lucroLiq = m.lucroOper - m.imposto - m.divida;
+    m.margemBruta = m.receita ? m.lucroBruto/m.receita : 0;
+    m.margemLiq = m.receita ? m.lucroLiq/m.receita : 0;
+  });
+  VIEWS.forEach(v => CACHE.sujo[v] = true);
+}
+
+function pinta(v){
+  if(!CACHE.sujo[v]) return;
+  PINTA[v]();
+  CACHE.sujo[v] = false;
+}
+
+function render(){
+  const ultimo = S.todas.length ? S.todas[S.todas.length-1] : null;
+  document.getElementById("hdrBalance").textContent = ultimo ? brl.format(ultimo.saldo) : "—";
+  recalcula();
+  sugerePista();
+  pinta(S.view);
+}
+
+/* ---------- visão geral ---------- */
+function renderGeral(linhas, meses){
+  const receita = linhas.reduce((s,l) => s + l.inn, 0);
+  const despesa = linhas.reduce((s,l) => s + l.out, 0);
+  const liquido = receita - despesa;
+  const n = meses.length || 1;
+  const saldoAtual = linhas.length ? linhas[linhas.length-1].saldo : S.saldoAbertura;
+  const melhor = meses.reduce((a,b) => (b.entrada-b.saida) > (a.entrada-a.saida) ? b : a, meses[0]);
+  const pior = meses.reduce((a,b) => (b.entrada-b.saida) < (a.entrada-a.saida) ? b : a, meses[0]);
+
+  document.getElementById("kpisGeral").innerHTML =
+    kpi("Saldo em caixa", brl.format(saldoAtual), linhas.length ? "em " + dataBR(linhas[linhas.length-1].data) : "—", "lead") +
+    kpi("Receita total", `<span class="pos">${brl.format(receita)}</span>`, "média " + brl.format(receita/n) + "/mês") +
+    kpi("Despesa total", `<span class="neg">${brl.format(despesa)}</span>`, "média " + brl.format(despesa/n) + "/mês") +
+    kpi("Fluxo líquido", `<span class="${liquido>=0?"pos":"neg"}">${brl.format(liquido)}</span>`,
+        (receita ? pct(liquido/receita) : "—") + " da receita") +
+    kpi("Melhor mês", melhor ? mesLabel(melhor.k) : "—",
+        melhor ? brl.format(melhor.entrada - melhor.saida) : "") +
+    kpi("Pior mês", pior ? mesLabel(pior.k) : "—",
+        pior ? brl.format(pior.entrada - pior.saida) : "");
+
+  barrasMensais(document.getElementById("chartMensal"), meses);
+
+  const porCat = new Map();
+  linhas.filter(l => l.out).forEach(l => porCat.set(l.cat, (porCat.get(l.cat)||0) + l.out));
+  const totalCat = [...porCat.values()].reduce((a,b) => a+b, 0) || 1;
+  const nMeses = meses.length || 1;
+  const itens = [...porCat.entries()].sort((a,b) => b[1]-a[1]).slice(0,6)
+    .map(([cat,valor]) => ({cat, valor, share: valor/totalCat, orc: ORCAMENTO[cat] ? ORCAMENTO[cat]*nMeses : null}));
+  barrasCategoria(document.getElementById("chartCategorias"), itens);
+
+  const reais = meses.map(m => ({k:m.k, v:m.saldoFim ?? S.saldoAbertura}));
+  linhaSaldo(document.getElementById("chartSaldo"), reais, projecao(meses, reais), S.saldoMin);
+}
+
+function projecao(meses, reais){
+  if(!reais.length) return [];
+  const base = meses.slice(-3);
+  if(!base.length) return [];
+  const entradaM = base.reduce((s,m) => s+m.entrada, 0) / base.length;
+  const saidaM = base.reduce((s,m) => s+m.saida, 0) / base.length;
+  const liq = entradaM - saidaM;
+  const out = [];
+  let v = reais[reais.length-1].v;
+  const [ano, mes] = reais[reais.length-1].k.split("-").map(Number);
+  for(let i = 1; i <= 3; i++){
+    const d = new Date(ano, mes-1+i, 1);
+    v += liq;
+    out.push({k: mesKey(d), v, proj:true, entrada:entradaM, saida:saidaM, liq});
+  }
+  return out;
+}
+
+/* ---------- DRE ---------- */
+function renderDre(meses){
+  if(!meses.length){
+    document.getElementById("kpisDre").innerHTML = "";
+    document.getElementById("tblDre").innerHTML = `<tbody><tr><td>${vazio()}</td></tr></tbody>`;
+    document.getElementById("chartMargens").innerHTML = vazio();
+    document.getElementById("chartLucro").innerHTML = vazio();
+    return;
+  }
+  const cur = meses[meses.length-1];
+  const ant = meses.length > 1 ? meses[meses.length-2] : null;
+  const orcTot = Object.values(ORCAMENTO).reduce((a,b) => a+b, 0);
+  const orcado = {
+    receita: Math.round(meses.reduce((s,m) => s+m.receita, 0) / meses.length),
+    cmv: (ORCAMENTO["Infraestrutura"]+ORCAMENTO["Freelancers"]+ORCAMENTO["Licenças de software"]) || 0,
+    despOper: orcTot - (ORCAMENTO["Infraestrutura"]+ORCAMENTO["Freelancers"]+ORCAMENTO["Licenças de software"])
+              - (ORCAMENTO["DAS Simples"]+ORCAMENTO["ISS"]) - (ORCAMENTO["Empréstimo"]+ORCAMENTO["Cartão PJ"]),
+    imposto: (ORCAMENTO["DAS Simples"]+ORCAMENTO["ISS"]) || 0,
+    divida: (ORCAMENTO["Empréstimo"]+ORCAMENTO["Cartão PJ"]) || 0
+  };
+  orcado.lucroBruto = orcado.receita - orcado.cmv;
+  orcado.lucroOper = orcado.lucroBruto - orcado.despOper;
+  orcado.lucroLiq = orcado.lucroOper - orcado.imposto - orcado.divida;
+
+  document.getElementById("dreTitulo").textContent = "Demonstrativo de " + mesLabel(cur.k);
+  document.getElementById("kpisDre").innerHTML =
+    kpi("Receita líquida", brl.format(cur.receita), delta(cur.receita, ant && ant.receita), "lead") +
+    kpi("Lucro bruto", brl.format(cur.lucroBruto), "margem " + pct(cur.margemBruta)) +
+    kpi("Lucro operacional", `<span class="${cur.lucroOper>=0?"pos":"neg"}">${brl.format(cur.lucroOper)}</span>`,
+        delta(cur.lucroOper, ant && ant.lucroOper)) +
+    kpi("Lucro líquido", `<span class="${cur.lucroLiq>=0?"pos":"neg"}">${brl.format(cur.lucroLiq)}</span>`,
+        "margem " + pct(cur.margemLiq));
+
+  const linha = (rot, atual, anterior, orc, forte) => {
+    const varAnt = anterior != null ? atual - anterior : null;
+    const varOrc = orc != null ? atual - orc : null;
+    return `<tr${forte ? ' style="font-weight:600"' : ""}>
+      <td>${esc(rot)}</td>
+      <td class="r num">${brl.format(atual)}</td>
+      <td class="r num">${anterior != null ? brl.format(anterior) : "—"}</td>
+      <td class="r num ${varAnt == null ? "" : varAnt >= 0 ? "pos" : "neg"}">${varAnt == null ? "—" : (varAnt>=0?"+":"") + brl.format(varAnt)}</td>
+      <td class="r num">${orc != null ? brl.format(orc) : "—"}</td>
+      <td class="r num ${varOrc == null ? "" : varOrc >= 0 ? "pos" : "neg"}">${varOrc == null ? "—" : (varOrc>=0?"+":"") + brl.format(varOrc)}</td>
+    </tr>`;
+  };
+  document.getElementById("tblDre").innerHTML = `
+    <thead><tr><th>Linha</th><th class="r">${mesLabel(cur.k)}</th><th class="r">${ant?mesLabel(ant.k):"—"}</th>
+    <th class="r">Δ mês</th><th class="r">Orçado</th><th class="r">Δ orç.</th></tr></thead>
+    <tbody>
+      ${linha("Receita", cur.receita, ant && ant.receita, orcado.receita)}
+      ${linha("(−) Custo dos serviços (CMV)", -cur.cmv, ant && -ant.cmv, -orcado.cmv)}
+      ${linha("= Lucro bruto", cur.lucroBruto, ant && ant.lucroBruto, orcado.lucroBruto, true)}
+      ${linha("(−) Despesas operacionais", -cur.despOper, ant && -ant.despOper, -orcado.despOper)}
+      ${linha("= Lucro operacional", cur.lucroOper, ant && ant.lucroOper, orcado.lucroOper, true)}
+      ${linha("(−) Impostos", -cur.imposto, ant && -ant.imposto, -orcado.imposto)}
+      ${linha("(−) Dívidas e financeiras", -cur.divida, ant && -ant.divida, -orcado.divida)}
+      ${linha("= Lucro líquido", cur.lucroLiq, ant && ant.lucroLiq, orcado.lucroLiq, true)}
+    </tbody>
+    <tfoot><tr>
+      <td style="color:var(--ink-2)">Margem bruta / líquida</td>
+      <td class="r num">${pct(cur.margemBruta)} · ${pct(cur.margemLiq)}</td>
+      <td class="r num">${ant ? pct(ant.margemBruta) + " · " + pct(ant.margemLiq) : "—"}</td>
+      <td colspan="3"></td>
+    </tr></tfoot>`;
+
+  linhasPercentuais(document.getElementById("chartMargens"), meses, [
+    {campo:"margemBruta", nome:"Margem bruta", cor:"var(--s1)"},
+    {campo:"margemLiq", nome:"Margem líquida", cor:"var(--s6)"}
+  ]);
+  barrasSinal(document.getElementById("chartLucro"), meses, "lucroLiq");
+}
+
+function delta(atual, anterior){
+  if(anterior == null || !anterior) return "sem mês anterior";
+  const d = (atual - anterior) / Math.abs(anterior);
+  return (d >= 0 ? "▲ " : "▼ ") + pct(Math.abs(d)) + " vs mês anterior";
+}
+
+/* ---------- fluxo de caixa ---------- */
+function renderCaixa(linhas, meses){
+  if(!meses.length){
+    document.getElementById("kpisCaixa").innerHTML = "";
+    document.getElementById("dlCaixa").innerHTML = vazio();
+    document.getElementById("tblDrenos").innerHTML = "";
+    document.getElementById("tblPrevisao").innerHTML = "";
+    document.getElementById("alertaCaixa").innerHTML = "";
+    return;
+  }
+  const cur = meses[meses.length-1];
+  const idx = meses.indexOf(cur);
+  const saldoIni = idx > 0 ? (meses[idx-1].saldoFim ?? S.saldoAbertura) : S.saldoAbertura;
+  const saldoFim = cur.saldoFim ?? saldoIni;
+  const liquido = cur.entrada - cur.saida;
+
+  document.getElementById("caixaTitulo").textContent = "Movimento de " + mesLabel(cur.k);
+  document.getElementById("kpisCaixa").innerHTML =
+    kpi("Saldo inicial", brl.format(saldoIni), "abertura de " + mesLabel(cur.k)) +
+    kpi("Entradas", `<span class="pos">${brl.format(cur.entrada)}</span>`, "no mês") +
+    kpi("Saídas", `<span class="neg">${brl.format(cur.saida)}</span>`, "no mês") +
+    kpi("Fluxo líquido", `<span class="${liquido>=0?"pos":"neg"}">${brl.format(liquido)}</span>`,
+        liquido>=0 ? "o caixa cresceu" : "o caixa encolheu") +
+    kpi("Saldo final", brl.format(saldoFim),
+        saldoFim < S.saldoMin ? "abaixo do mínimo" : "folga de " + brl.format(saldoFim - S.saldoMin), "lead");
+
+  document.getElementById("dlCaixa").innerHTML = `
+    <div class="dl" style="grid-column:1/-1;display:contents"></div>
+    <dt>Saldo inicial de caixa</dt><dd>${brl2.format(saldoIni)}</dd>
+    <dt>Entradas</dt><dd class="pos">+ ${brl2.format(cur.entrada)}</dd>
+    <dt>Despesas operacionais</dt><dd>− ${brl2.format(cur.operacional)}</dd>
+    <dt>Custo dos serviços</dt><dd>− ${brl2.format(cur.cmv)}</dd>
+    <dt>Impostos</dt><dd>− ${brl2.format(cur.imposto)}</dd>
+    <dt>Dívidas</dt><dd>− ${brl2.format(cur.divida)}</dd>
+    <dt>Investimentos</dt><dd>− ${brl2.format(cur.investimento)}</dd>
+    <dt>Outras saídas</dt><dd>− ${brl2.format(cur.outras)}</dd>
+    <div class="strong" style="display:contents"><dt>Fluxo de caixa líquido</dt><dd class="${liquido>=0?"pos":"neg"}">${brl2.format(liquido)}</dd></div>
+    <div class="strong" style="display:contents"><dt>Saldo final de caixa</dt><dd>${brl2.format(saldoFim)}</dd></div>`;
+
+  const drenos = new Map();
+  linhas.filter(l => l.out).forEach(l => drenos.set(l.cat, (drenos.get(l.cat)||0) + l.out));
+  const totalSaida = [...drenos.values()].reduce((a,b)=>a+b,0) || 1;
+  document.getElementById("tblDrenos").innerHTML = `
+    <thead><tr><th>Categoria</th><th class="r">Saída</th><th class="r">Fatia</th></tr></thead>
+    <tbody>${[...drenos.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([c,v]) => `
+      <tr><td>${esc(c)}</td><td class="r num">${brl.format(v)}</td>
+      <td class="r num">${pct(v/totalSaida)}</td></tr>`).join("")}</tbody>`;
+
+  const reais = meses.map(m => ({k:m.k, v:m.saldoFim ?? S.saldoAbertura}));
+  const proj = projecao(meses, reais);
+  let alerta = "";
+  const furos = proj.filter(p => p.v < S.saldoMin);
+  if(furos.length){
+    alerta = `<div class="alert bad"><strong>⚠</strong><div>
+      Projeção fura o saldo mínimo de ${brl.format(S.saldoMin)} em
+      <strong>${furos.map(f => mesLabel(f.k)).join(", ")}</strong>.
+      No ritmo dos últimos 3 meses o caixa fecha ${brl.format(furos[furos.length-1].v)} em ${mesLabel(furos[furos.length-1].k)}.
+    </div></div>`;
+  } else if(proj.length){
+    alerta = `<div class="alert ok"><strong>✓</strong><div>
+      Projeção de 3 meses fica acima do saldo mínimo de ${brl.format(S.saldoMin)}.
+      Menor saldo projetado: ${brl.format(Math.min(...proj.map(p=>p.v)))}.
+    </div></div>`;
+  }
+  document.getElementById("alertaCaixa").innerHTML = alerta;
+
+  document.getElementById("tblPrevisao").innerHTML = `
+    <thead><tr><th>Mês</th><th class="r">Entradas previstas</th><th class="r">Saídas previstas</th>
+    <th class="r">Fluxo líquido</th><th class="r">Saldo projetado</th><th>Situação</th></tr></thead>
+    <tbody>${proj.map(p => {
+      const abaixo = p.v < S.saldoMin;
+      return `<tr>
+        <td>${mesLabel(p.k)}</td>
+        <td class="r num">${brl.format(p.entrada)}</td>
+        <td class="r num">${brl.format(p.saida)}</td>
+        <td class="r num ${p.liq>=0?"pos":"neg"}">${brl.format(p.liq)}</td>
+        <td class="r num">${brl.format(p.v)}</td>
+        <td><span class="pill ${abaixo?"bad":"ok"}">${abaixo ? "abaixo do mínimo" : "acima do mínimo"}</span></td>
+      </tr>`;
+    }).join("")}</tbody>`;
+}
+
+/* ---------- orçamento ---------- */
+function renderOrcamento(linhas, meses){
+  if(!meses.length){
+    document.getElementById("kpisOrc").innerHTML = "";
+    document.getElementById("tblOrcamento").innerHTML = "";
+    document.getElementById("tblEstouros").innerHTML = "";
+    document.getElementById("chartOrcMensal").innerHTML = vazio();
+    return;
+  }
+  const cur = meses[meses.length-1];
+  const [ano, mes] = cur.k.split("-").map(Number);
+  const doMes = linhas.filter(l => mesKey(l.data) === cur.k && l.out);
+  const diasNoMes = new Date(ano, mes, 0).getDate();
+  const ultimoDia = Math.max(...doMes.map(l => l.data.getDate()), 1);
+  const fracao = Math.min(1, ultimoDia / diasNoMes);
+
+  const gasto = new Map();
+  doMes.forEach(l => gasto.set(l.cat, (gasto.get(l.cat)||0) + l.out));
+  const cats = [...new Set([...Object.keys(ORCAMENTO), ...gasto.keys()])]
+    .filter(c => ORCAMENTO[c] || gasto.get(c));
+
+  const linhasOrc = cats.map(c => {
+    const real = gasto.get(c) || 0;
+    const orc = ORCAMENTO[c] || 0;
+    const varR = real - orc;
+    const varP = orc ? varR/orc : null;
+    const uso = orc ? real/orc : null;
+    const prev = fracao > 0 ? real/fracao : real;
+    return {c, real, orc, varR, varP, uso, restante: orc - real, prev};
+  }).sort((a,b) => b.varR - a.varR);
+
+  const totOrc = linhasOrc.reduce((s,l) => s+l.orc, 0);
+  const totReal = linhasOrc.reduce((s,l) => s+l.real, 0);
+  const totPrev = linhasOrc.reduce((s,l) => s+l.prev, 0);
+  const estourando = linhasOrc.filter(l => l.orc && l.real > l.orc);
+
+  document.getElementById("orcTitulo").textContent = "Orçamento vs real — " + mesLabel(cur.k);
+  document.getElementById("kpisOrc").innerHTML =
+    kpi("Orçamento do mês", brl.format(totOrc), cats.length + " categorias") +
+    kpi("Gasto até agora", brl.format(totReal), "dia " + ultimoDia + " de " + diasNoMes, "lead") +
+    kpi("Utilização", totOrc ? pct(totReal/totOrc) : "—",
+        totOrc && totReal > totOrc ? "acima do orçado" : "dentro do orçado") +
+    kpi("Previsão de fechamento", brl.format(totPrev),
+        totOrc ? (totPrev > totOrc ? "estoura em " + brl.format(totPrev-totOrc) : "sobra " + brl.format(totOrc-totPrev)) : "") +
+    kpi("Categorias estouradas", String(estourando.length),
+        estourando.length ? estourando.slice(0,2).map(l=>l.c).join(", ") : "nenhuma");
+
+  const status = uso => uso == null ? ["", "sem orçamento"]
+    : uso > 1 ? ["bad","estourou"] : uso > .85 ? ["warn","no limite"] : ["ok","dentro"];
+
+  document.getElementById("tblOrcamento").innerHTML = `
+    <thead><tr><th>Categoria</th><th class="r">Orçado</th><th class="r">Real</th>
+    <th class="r">Variação R$</th><th class="r">Variação %</th><th class="r">Restante</th>
+    <th style="min-width:120px">Utilização</th><th>Status</th></tr></thead>
+    <tbody>${linhasOrc.map(l => {
+      const [cls, txt] = status(l.uso);
+      const w = l.uso == null ? 0 : Math.min(100, l.uso*100);
+      const cor = cls === "bad" ? "var(--bad)" : cls === "warn" ? "var(--warn)" : "var(--good)";
+      return `<tr>
+        <td>${esc(l.c)}</td>
+        <td class="r num">${l.orc ? brl.format(l.orc) : "—"}</td>
+        <td class="r num">${brl.format(l.real)}</td>
+        <td class="r num ${l.varR > 0 ? "neg" : "pos"}">${l.orc ? (l.varR>0?"+":"") + brl.format(l.varR) : "—"}</td>
+        <td class="r num ${l.varP != null && l.varP > 0 ? "neg" : "pos"}">${l.varP != null ? (l.varP>0?"+":"") + pct(l.varP) : "—"}</td>
+        <td class="r num">${l.orc ? brl.format(l.restante) : "—"}</td>
+        <td><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${cor}"></div></div></td>
+        <td><span class="pill ${cls||"ok"}">${txt}</span></td>
+      </tr>`;
+    }).join("")}</tbody>
+    <tfoot><tr style="font-weight:600">
+      <td>Total</td><td class="r num">${brl.format(totOrc)}</td><td class="r num">${brl.format(totReal)}</td>
+      <td class="r num ${totReal-totOrc>0?"neg":"pos"}">${(totReal-totOrc>0?"+":"")+brl.format(totReal-totOrc)}</td>
+      <td class="r num">${totOrc?pct((totReal-totOrc)/totOrc):"—"}</td>
+      <td class="r num">${brl.format(totOrc-totReal)}</td>
+      <td colspan="2"></td>
+    </tr></tfoot>`;
+
+  document.getElementById("tblEstouros").innerHTML = estourando.length ? `
+    <thead><tr><th>Categoria</th><th class="r">Estouro</th><th class="r">%</th></tr></thead>
+    <tbody>${estourando.slice(0,8).map(l => `<tr>
+      <td>${esc(l.c)}</td><td class="r num neg">+${brl.format(l.varR)}</td>
+      <td class="r num neg">+${pct(l.varP)}</td></tr>`).join("")}</tbody>`
+    : `<tbody><tr><td style="color:var(--ink-3);padding:20px 10px">Nenhuma categoria estourou o orçamento em ${mesLabel(cur.k)}.</td></tr></tbody>`;
+
+  const orcMensal = Object.values(ORCAMENTO).reduce((a,b) => a+b, 0);
+  barrasOrcamento(document.getElementById("chartOrcMensal"), meses, orcMensal);
+}
+
+/* ---------- painel do dono (CFO) ---------- */
+function somaTrim(meses, fim){
+  const fatia = meses.slice(Math.max(0, fim-3), fim);
+  const o = {receita:0, lucroBruto:0, despOper:0, lucroLiq:0, n:fatia.length||1};
+  fatia.forEach(m => { o.receita += m.receita; o.lucroBruto += m.lucroBruto;
+                       o.despOper += m.despOper; o.lucroLiq += m.lucroLiq; });
+  return o;
+}
+function renderCfo(meses){
+  const alvo = document.getElementById("kpisCfo");
+  if(!meses.length){ alvo.innerHTML = vazio(); document.getElementById("tblCfo").innerHTML = "";
+                     document.getElementById("resumoCfo").innerHTML = ""; return; }
+  const i = meses.length-1, cur = meses[i];
+  const ant = i > 0 ? meses[i-1] : null;
+  const anoPassado = meses.find(m => {
+    const [a,mm] = m.k.split("-").map(Number), [ca,cm] = cur.k.split("-").map(Number);
+    return a === ca-1 && mm === cm;
+  });
+  const trimAtual = somaTrim(meses, i+1), trimAnt = somaTrim(meses, i-2);
+  const base = meses.slice(-3);
+  const queima = base.reduce((s,m) => s + Math.max(0, m.saida - m.entrada), 0) / base.length;
+  const caixa = cur.saldoFim ?? S.saldoAbertura;
+  const pista = queima > 0 ? caixa / queima : Infinity;
+  const cresc = ant && ant.receita ? (cur.receita - ant.receita)/ant.receita : null;
+
+  document.getElementById("cfoTitulo").textContent = "Comparação de " + mesLabel(cur.k);
+  alvo.innerHTML =
+    kpi("Receita do mês", brl.format(cur.receita), cresc == null ? "—" : seta(cresc) + " vs mês anterior", "lead") +
+    kpi("Lucro bruto", brl.format(cur.lucroBruto), "margem " + pct(cur.margemBruta)) +
+    kpi("Despesas operacionais", brl.format(cur.despOper),
+        ant ? seta((cur.despOper - ant.despOper)/(ant.despOper||1)) + " vs mês anterior" : "—") +
+    kpi("Lucro líquido", `<span class="${cur.lucroLiq>=0?"pos":"neg"}">${brl.format(cur.lucroLiq)}</span>`,
+        "margem " + pct(cur.margemLiq)) +
+    kpi("Caixa", brl.format(caixa), "no fim de " + mesLabel(cur.k)) +
+    kpi("Queima média", queima > 0 ? brl.format(queima) + "/mês" : "não queima",
+        queima > 0 ? "média dos últimos 3 meses" : "o caixa cresceu nos 3 últimos meses") +
+    kpi("Pista de caixa", pista === Infinity ? "sem prazo" : pista.toFixed(1).replace(".",",") + " meses",
+        pista === Infinity ? "as entradas cobrem as saídas" : "no ritmo atual de queima", "lead");
+
+  const meta = {
+    receita: Math.round(meses.reduce((s,m) => s+m.receita, 0)/meses.length * 1.1),
+    margemBruta: 0.55, despOper: Object.values(ORCAMENTO).reduce((a,b)=>a+b,0)*0.6, margemLiq: 0.15
+  };
+  const cmp = (rot, atual, anterior, trimA, trimB, metaV, fmt, maiorMelhor=true) => {
+    const dMes = anterior != null && anterior !== 0 ? (atual-anterior)/Math.abs(anterior) : null;
+    const dTrim = trimB ? (trimA-trimB)/Math.abs(trimB||1) : null;
+    const dMeta = metaV ? (atual-metaV)/Math.abs(metaV) : null;
+    const cor = v => v == null ? "" : ((v >= 0) === maiorMelhor ? "pos" : "neg");
+    return `<tr>
+      <td>${esc(rot)}</td>
+      <td class="r num">${fmt(atual)}</td>
+      <td class="r num ${cor(dMes)}">${dMes == null ? "—" : seta(dMes)}</td>
+      <td class="r num ${cor(dTrim)}">${dTrim == null ? "—" : seta(dTrim)}</td>
+      <td class="r num">${metaV ? fmt(metaV) : "—"}</td>
+      <td class="r num ${cor(dMeta)}">${dMeta == null ? "—" : seta(dMeta)}</td>
+    </tr>`;
+  };
+  const fBRL = v => brl.format(v), fPCT = v => pct(v);
+  document.getElementById("tblCfo").innerHTML = `
+    <thead><tr><th>Indicador</th><th class="r">${mesLabel(cur.k)}</th><th class="r">vs mês</th>
+    <th class="r">vs trimestre</th><th class="r">Meta</th><th class="r">vs meta</th></tr></thead>
+    <tbody>
+      ${cmp("Receita", cur.receita, ant && ant.receita, trimAtual.receita, trimAnt.receita, meta.receita, fBRL)}
+      ${cmp("Lucro bruto", cur.lucroBruto, ant && ant.lucroBruto, trimAtual.lucroBruto, trimAnt.lucroBruto, null, fBRL)}
+      ${cmp("Margem bruta", cur.margemBruta, ant && ant.margemBruta, cur.margemBruta, ant && ant.margemBruta, meta.margemBruta, fPCT)}
+      ${cmp("Despesas operacionais", cur.despOper, ant && ant.despOper, trimAtual.despOper, trimAnt.despOper, meta.despOper, fBRL, false)}
+      ${cmp("Lucro líquido", cur.lucroLiq, ant && ant.lucroLiq, trimAtual.lucroLiq, trimAnt.lucroLiq, null, fBRL)}
+      ${cmp("Margem líquida", cur.margemLiq, ant && ant.margemLiq, cur.margemLiq, ant && ant.margemLiq, meta.margemLiq, fPCT)}
+      ${anoPassado ? cmp("Receita, mesmo mês do ano passado", cur.receita, anoPassado.receita, cur.receita, anoPassado.receita, null, fBRL) : ""}
+    </tbody>`;
+
+  /* resumo em 3 pontos, calculado */
+  const cands = [];
+  if(ant){
+    cands.push({t:"Receita", d:(cur.receita-ant.receita)/(ant.receita||1),
+      txt:`Receita foi de ${brl.format(ant.receita)} para ${brl.format(cur.receita)}.`});
+    cands.push({t:"Margem líquida", d:cur.margemLiq-ant.margemLiq,
+      txt:`Margem líquida saiu de ${pct(ant.margemLiq)} para ${pct(cur.margemLiq)}.`});
+    cands.push({t:"Despesas operacionais", d:-((cur.despOper-ant.despOper)/(ant.despOper||1)),
+      txt:`Despesas operacionais passaram de ${brl.format(ant.despOper)} para ${brl.format(cur.despOper)}.`});
+    cands.push({t:"Custo dos serviços", d:-((cur.cmv-ant.cmv)/(ant.cmv||1)),
+      txt:`Custo dos serviços foi de ${brl.format(ant.cmv)} para ${brl.format(cur.cmv)}.`});
+  }
+  cands.sort((a,b) => b.d - a.d);
+  const melhorou = cands[0], piorou = cands[cands.length-1];
+  const atencao = pista !== Infinity && pista < 6
+    ? `Pista de ${pista.toFixed(1).replace(".",",")} meses: com ${brl.format(caixa)} em caixa e queima de ${brl.format(queima)} por mês, o caixa zera por volta de ${dataZero(caixa, queima)}.`
+    : cur.margemLiq < 0
+      ? `O mês fechou no vermelho: prejuízo de ${brl.format(Math.abs(cur.lucroLiq))} sobre receita de ${brl.format(cur.receita)}.`
+      : `Maior saída do mês é ${maiorSaida(cur)}. É onde um corte pesa mais.`;
+  const ponto = (rot, cls, texto) => `<div style="display:flex;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)">
+      <span class="pill ${cls}" style="flex:0 0 auto;align-self:flex-start">${rot}</span>
+      <div style="font-size:13px;color:var(--ink-2)">${texto}</div></div>`;
+  document.getElementById("resumoCfo").innerHTML = ant ? (
+    ponto("melhorou","ok", `<strong style="color:var(--ink)">${esc(melhorou.t)}.</strong> ${melhorou.txt}`) +
+    ponto("piorou","bad", `<strong style="color:var(--ink)">${esc(piorou.t)}.</strong> ${piorou.txt}`) +
+    ponto("atenção","warn", atencao)
+  ) : `<p style="color:var(--ink-3);font-size:13px">Só há um mês no recorte. Aumente o período para comparar.</p>`;
+}
+function seta(d){ return (d >= 0 ? "▲ " : "▼ ") + pct(Math.abs(d)); }
+function dataZero(caixa, queima){
+  if(queima <= 0) return "—";
+  const meses = Math.floor(caixa/queima);
+  const d = new Date(); d.setMonth(d.getMonth() + meses);
+  return MESES[d.getMonth()] + "/" + d.getFullYear();
+}
+function maiorSaida(m){
+  const pares = [["despesas operacionais", m.despOper], ["custo dos serviços", m.cmv],
+                 ["impostos", m.imposto], ["dívidas", m.divida], ["investimentos", m.investimento]];
+  pares.sort((a,b) => b[1]-a[1]);
+  return pares[0][0] + " (" + brl.format(pares[0][1]) + ")";
+}
+
+/* ---------- pista de decolagem ---------- */
+function sugerePista(){
+  if(S.pistaEditada || !CACHE.meses.length) return;
+  const base = CACHE.meses.slice(-3);
+  const media = campo => base.reduce((s,m) => s + m[campo], 0) / base.length;
+  const folha = CACHE.linhas.filter(l => l.cat === "Pró-labore" || /folha|salário|salario/i.test(l.cat))
+    .reduce((s,l) => s + l.out, 0) / (base.length || 1);
+  const saida = media("saida");
+  const cur = CACHE.meses[CACHE.meses.length-1];
+  const ant = CACHE.meses.length > 1 ? CACHE.meses[CACHE.meses.length-2] : null;
+  const set = (id, v) => document.getElementById(id).value = Math.round(v);
+  set("pCaixa", cur.saldoFim ?? S.saldoAbertura);
+  set("pReceita", media("entrada"));
+  set("pFolha", folha);
+  set("pOutros", Math.max(0, saida - folha));
+  document.getElementById("pCresc").value =
+    (ant && ant.receita ? ((cur.receita-ant.receita)/ant.receita*100) : 0).toFixed(1);
+}
+function lePista(){
+  const v = id => +document.getElementById(id).value || 0;
+  return { caixa:v("pCaixa"), receita:v("pReceita"), folha:v("pFolha"), outros:v("pOutros"), cresc:v("pCresc")/100 };
+}
+function projetaCenario(p, fatorCresc, fatorCusto){
+  const linhas = [];
+  let caixa = p.caixa, receita = p.receita;
+  const custo = (p.folha + p.outros) * fatorCusto;
+  for(let i = 1; i <= 12; i++){
+    receita = i === 1 ? p.receita : receita * (1 + p.cresc*fatorCresc);
+    const liq = receita - custo;
+    caixa += liq;
+    const d = new Date(); d.setMonth(d.getMonth() + i);
+    linhas.push({ k: mesKey(d), receita, custo, liq, caixa });
+  }
+  return linhas;
+}
+function renderPista(){
+  const p = lePista();
+  const queimaBruta = p.folha + p.outros;
+  const queimaLiq = Math.max(0, queimaBruta - p.receita);
+  const mesesPista = queimaLiq > 0 ? p.caixa / queimaLiq : Infinity;
+  const equilibrio = queimaBruta;
+
+  document.getElementById("kpisPista").innerHTML =
+    kpi("Caixa hoje", brl.format(p.caixa), "ponto de partida", "lead") +
+    kpi("Queima bruta", brl.format(queimaBruta) + "/mês", "folha " + brl.format(p.folha) + " + outros " + brl.format(p.outros)) +
+    kpi("Queima líquida", queimaLiq > 0 ? brl.format(queimaLiq) + "/mês" : "zero",
+        queimaLiq > 0 ? "custos menos receita" : "a receita já cobre os custos") +
+    kpi("Meses de pista", mesesPista === Infinity ? "sem prazo" : mesesPista.toFixed(1).replace(".",",") + " meses",
+        mesesPista === Infinity ? "não queima caixa" : "sem crescer a receita", "lead") +
+    kpi("Data de caixa zero", queimaLiq > 0 ? dataZero(p.caixa, queimaLiq) : "não zera", "no ritmo de hoje") +
+    kpi("Receita de equilíbrio", brl.format(equilibrio) + "/mês",
+        p.receita >= equilibrio ? "já alcançada" : "faltam " + brl.format(equilibrio - p.receita));
+
+  const base = projetaCenario(p, 1, 1);
+  const melhor = projetaCenario(p, 1.5, 0.95);
+  const pior = projetaCenario(p, 0.3, 1.12);
+  cenarios(document.getElementById("chartCenarios"), {base, melhor, pior}, p.caixa);
+
+  const zera = base.find(l => l.caixa < 0);
+  document.getElementById("alertaPista").innerHTML = zera
+    ? `<div class="alert bad"><strong>⚠</strong><div>No cenário base o caixa fica negativo em
+        <strong>${mesLabel(zera.k)}</strong>. Para não chegar lá: subir receita para
+        ${brl.format(equilibrio)} por mês, ou cortar ${brl.format(queimaLiq)} de custo por mês.</div></div>`
+    : `<div class="alert ok"><strong>✓</strong><div>No cenário base o caixa não zera em 12 meses.
+        Menor saldo projetado: ${brl.format(Math.min(...base.map(l => l.caixa)))}.</div></div>`;
+
+  document.getElementById("tblPista").innerHTML = `
+    <thead><tr><th>Mês</th><th class="r">Receita</th><th class="r">Custo</th>
+    <th class="r">Sobra do mês</th><th class="r">Caixa no fim</th><th>Situação</th></tr></thead>
+    <tbody>${base.map(l => `<tr>
+      <td>${mesLabel(l.k)}</td>
+      <td class="r num">${brl.format(l.receita)}</td>
+      <td class="r num">${brl.format(l.custo)}</td>
+      <td class="r num ${l.liq>=0?"pos":"neg"}">${brl.format(l.liq)}</td>
+      <td class="r num">${brl.format(l.caixa)}</td>
+      <td><span class="pill ${l.caixa < 0 ? "bad" : l.caixa < p.caixa*0.3 ? "warn" : "ok"}">${
+        l.caixa < 0 ? "caixa negativo" : l.caixa < p.caixa*0.3 ? "apertado" : "confortável"}</span></td>
+    </tr>`).join("")}</tbody>`;
+}
+function cenarios(el, cen, caixaIni){
+  const todos = [...cen.base, ...cen.melhor, ...cen.pior].map(l => l.caixa).concat([caixaIni, 0]);
+  const lo = Math.min(...todos), hi = Math.max(...todos);
+  const W = 1180, H = 300, ml = 62, mr = 16, mt = 14, mb = 32;
+  const iw = W-ml-mr, ih = H-mt-mb, n = cen.base.length;
+  const x = i => ml + iw*i/n;
+  const y = v => mt + ih - ((v-lo)/((hi-lo)||1))*ih;
+  let g = "";
+  for(let t = 0; t <= 4; t++){
+    const v = lo + (hi-lo)*t/4;
+    g += `<line x1="${ml}" x2="${W-mr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>` +
+         `<text x="${ml-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)" font-family="IBM Plex Mono,monospace">${kBRL(v)}</text>`;
+  }
+  if(lo < 0) g += `<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  [["pior","var(--s2)"],["base","var(--s1)"],["melhor","var(--s3)"]].forEach(([nome,cor]) => {
+    const d = [{caixa:caixaIni}].concat(cen[nome]).map((l,i) => (i?"L":"M") + x(i) + " " + y(l.caixa)).join(" ");
+    g += `<path d="${d}" fill="none" stroke="${cor}" stroke-width="${nome==="base"?2.5:2}" stroke-linejoin="round" stroke-linecap="round" ${nome==="base"?"":'opacity=".85"'}/>`;
+    const ult = cen[nome][n-1];
+    g += `<circle cx="${x(n)}" cy="${y(ult.caixa)}" r="4.5" fill="${cor}" stroke="var(--surface)" stroke-width="2"/>`;
+  });
+  cen.base.forEach((l,i) => {
+    if(i % 2 === 1 || i === n-1)
+      g += `<text x="${x(i+1)}" y="${H-11}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${mesLabel(l.k)}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="${x(i+1)-iw/n/2}" y="${mt}" width="${iw/n}" height="${ih}" fill="transparent"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Projeção de caixa em três cenários">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(r => {
+    r.addEventListener("mousemove", ev => {
+      const i = +r.dataset.i;
+      mostraTT(ev, mesLabel(cen.base[i].k), [
+        ["Melhor caso", brl.format(cen.melhor[i].caixa)],
+        ["Base", brl.format(cen.base[i].caixa)],
+        ["Pior caso", brl.format(cen.pior[i].caixa)]
+      ]);
+    });
+    r.addEventListener("mouseleave", escondeTT);
+  });
+}
+
+/* ---------- alertas calculados ---------- */
+function renderAlertas(linhas, meses){
+  const saida = [];
+  const box = (cls, titulo, corpo, numero) => `<div class="card" style="margin-bottom:12px">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <span class="pill ${cls}" style="flex:0 0 auto">${cls === "bad" ? "risco" : cls === "warn" ? "atenção" : "positivo"}</span>
+      <div style="min-width:0;flex:1">
+        <h2 style="font-size:14px;margin-bottom:3px">${titulo}</h2>
+        <div style="font-size:13px;color:var(--ink-2)">${corpo}</div>
+      </div>
+      <div class="num" style="font-size:17px;font-weight:600;white-space:nowrap">${numero}</div>
+    </div></div>`;
+
+  /* 1. gastos fora do padrão, por categoria */
+  const porCat = new Map();
+  linhas.filter(l => l.out).forEach(l => {
+    if(!porCat.has(l.cat)) porCat.set(l.cat, []);
+    porCat.get(l.cat).push(l);
+  });
+  porCat.forEach((ls, cat) => {
+    if(ls.length < 4) return;
+    const vs = ls.map(l => l.out);
+    const media = vs.reduce((a,b) => a+b, 0)/vs.length;
+    const dp = Math.sqrt(vs.reduce((s,v) => s + (v-media)**2, 0)/vs.length);
+    if(dp === 0) return;
+    ls.forEach(l => {
+      if(l.out > media + 2*dp){
+        saida.push({ordem: (l.out-media)/dp, html: box("warn",
+          `Gasto fora do padrão em ${esc(cat)}`,
+          `${esc(l.desc)} em ${dataBR(l.data)} custou ${brl2.format(l.out)}. A média da categoria é
+           ${brl2.format(media)} — esse lançamento está ${pct((l.out-media)/media)} acima dela.`,
+          "+" + pct((l.out-media)/media))});
+      }
+    });
+  });
+
+  /* 2. receita caindo */
+  if(meses.length >= 2){
+    const cur = meses[meses.length-1], ant = meses[meses.length-2];
+    if(ant.receita && cur.receita < ant.receita){
+      const d = (cur.receita-ant.receita)/ant.receita;
+      saida.push({ordem: 50 + Math.abs(d)*100, html: box(Math.abs(d) > .15 ? "bad" : "warn",
+        "Receita caiu no último mês",
+        `De ${brl.format(ant.receita)} em ${mesLabel(ant.k)} para ${brl.format(cur.receita)} em
+         ${mesLabel(cur.k)}. São ${brl.format(ant.receita-cur.receita)} a menos.`,
+        pct(d))});
+    }
+  }
+  /* 3. custo crescendo rápido */
+  if(meses.length >= 4){
+    const ult3 = meses.slice(-3), ant3 = meses.slice(-6,-3);
+    if(ant3.length){
+      ["cmv","operacional","imposto","divida"].forEach(b => {
+        const a = ant3.reduce((s,m) => s+m[b], 0)/ant3.length;
+        const c = ult3.reduce((s,m) => s+m[b], 0)/ult3.length;
+        if(a > 0 && (c-a)/a > .20){
+          const nomes = {cmv:"Custo dos serviços", operacional:"Despesas operacionais",
+                         imposto:"Impostos", divida:"Dívidas"};
+          saida.push({ordem: 40 + (c-a)/a*100, html: box("warn",
+            nomes[b] + " crescendo rápido",
+            `Média dos 3 meses anteriores: ${brl.format(a)}. Média dos 3 últimos: ${brl.format(c)}.
+             São ${brl.format(c-a)} a mais por mês.`,
+            "+" + pct((c-a)/a))});
+        }
+      });
+    }
+  }
+  /* 4. melhor e pior mês de lucro */
+  if(meses.length >= 2){
+    const ord = meses.slice().sort((a,b) => b.lucroLiq - a.lucroLiq);
+    const top = ord[0], bot = ord[ord.length-1];
+    saida.push({ordem: 20, html: box("ok", "Mês de maior lucro: " + mesLabel(top.k),
+      `Lucro líquido de ${brl.format(top.lucroLiq)} sobre receita de ${brl.format(top.receita)},
+       margem de ${pct(top.margemLiq)}.`, brl.format(top.lucroLiq))});
+    saida.push({ordem: 21, html: box(bot.lucroLiq < 0 ? "bad" : "warn",
+      "Mês de menor lucro: " + mesLabel(bot.k),
+      `${bot.lucroLiq < 0 ? "Prejuízo" : "Lucro"} de ${brl.format(Math.abs(bot.lucroLiq))} sobre receita de
+       ${brl.format(bot.receita)}, margem de ${pct(bot.margemLiq)}.`, brl.format(bot.lucroLiq))});
+  }
+  /* 5. risco de caixa */
+  if(meses.length){
+    const reais = meses.map(m => ({k:m.k, v:m.saldoFim ?? S.saldoAbertura}));
+    const proj = projecao(meses, reais);
+    const furo = proj.find(p => p.v < S.saldoMin);
+    if(furo){
+      saida.push({ordem: 100, html: box("bad", "Risco de caixa nos próximos meses",
+        `Mantendo a média dos últimos 3 meses, o saldo cai para ${brl.format(furo.v)} em ${mesLabel(furo.k)},
+         abaixo do mínimo de ${brl.format(S.saldoMin)} que você definiu na aba Fluxo de caixa.`,
+        brl.format(furo.v))});
+    }
+    const negativos = meses.filter(m => m.entrada < m.saida);
+    if(negativos.length >= 2){
+      saida.push({ordem: 60, html: box("warn", "Meses com saída maior que entrada",
+        `${negativos.length} de ${meses.length} meses fecharam no negativo:
+         ${negativos.map(m => mesLabel(m.k)).join(", ")}.`, negativos.length + "/" + meses.length)});
+    }
+  }
+
+  saida.sort((a,b) => b.ordem - a.ordem);
+  document.getElementById("listaAlertas").innerHTML = saida.length
+    ? saida.slice(0,14).map(s => s.html).join("")
+    : `<div class="card"><p style="color:var(--ink-3);font-size:13px;margin:0">
+        Nenhuma regra disparou no recorte atual. Sem gasto fora do padrão, sem queda de receita e sem risco de caixa.</p></div>`;
+}
+
+/* ---------- patrimônio ---------- */
+const PATR = {
+  bens: [["Dinheiro em conta", 24800], ["Investimentos", 46200], ["Imóvel", 320000],
+         ["Previdência", 38500], ["Outros bens", 12000]],
+  dividas: [["Financiamento do imóvel", 186000], ["Cartão de crédito", 4300],
+            ["Empréstimos", 21500], ["Outras dívidas", 2800]]
+};
+function renderPatrimonio(meses){
+  const campo = (grupo, i, nome, valor) => `<div style="display:grid;grid-template-columns:1fr 140px;gap:8px;align-items:center;margin:7px 0">
+      <label for="p-${grupo}-${i}" style="font-size:13px;color:var(--ink-2)">${esc(nome)}</label>
+      <input type="number" id="p-${grupo}-${i}" data-g="${grupo}" data-i="${i}" value="${valor}" step="500" class="patr">
+    </div>`;
+  document.getElementById("formBens").innerHTML =
+    PATR.bens.map((b,i) => campo("bens", i, b[0], b[1])).join("");
+  document.getElementById("formDividas").innerHTML =
+    PATR.dividas.map((b,i) => campo("dividas", i, b[0], b[1])).join("");
+
+  const totBens = PATR.bens.reduce((s,b) => s+b[1], 0);
+  const totDiv = PATR.dividas.reduce((s,b) => s+b[1], 0);
+  const liquido = totBens - totDiv;
+  const razao = totBens ? totDiv/totBens : 0;
+  const n = meses.length || 1;
+  const entrada = meses.reduce((s,m) => s+m.entrada, 0)/n;
+  const saidaM = meses.reduce((s,m) => s+m.saida, 0)/n;
+  const taxaPoupanca = entrada ? (entrada-saidaM)/entrada : 0;
+
+  document.getElementById("kpisPatr").innerHTML =
+    kpi("Patrimônio líquido", `<span class="${liquido>=0?"pos":"neg"}">${brl.format(liquido)}</span>`,
+        "bens menos dívidas", "lead") +
+    kpi("Total de bens", brl.format(totBens), PATR.bens.length + " tipos") +
+    kpi("Total de dívidas", brl.format(totDiv), PATR.dividas.length + " tipos") +
+    kpi("Dívida sobre bens", pct(razao),
+        razao < .3 ? "folgado" : razao < .6 ? "aceitável" : "alavancado") +
+    kpi("Entrada média", brl.format(entrada), "por mês, no período filtrado") +
+    kpi("Quanto sobra", pct(taxaPoupanca),
+        brl.format(entrada-saidaM) + " por mês");
+
+  barrasCategoria(document.getElementById("chartBens"),
+    PATR.bens.map(b => ({cat:b[0], valor:b[1], share: totBens ? b[1]/totBens : 0, orc:null})).sort((a,b)=>b.valor-a.valor));
+  barrasCategoria(document.getElementById("chartDividas"),
+    PATR.dividas.map(b => ({cat:b[0], valor:b[1], share: totDiv ? b[1]/totDiv : 0, orc:null})).sort((a,b)=>b.valor-a.valor));
+  barrasSinal(document.getElementById("chartPoupanca"),
+    meses.map(m => ({k:m.k, sobra:m.entrada-m.saida, lucroLiq:m.entrada-m.saida, receita:m.entrada})), "sobra");
+
+  document.querySelectorAll(".patr").forEach(inp => {
+    inp.addEventListener("change", e => {
+      PATR[e.target.dataset.g][+e.target.dataset.i][1] = +e.target.value || 0;
+      renderPatrimonio(CACHE.meses);
+    });
+  });
+}
+
+/* ---------- transações ---------- */
+function renderTx(linhas){
+  const receita = linhas.reduce((s,l) => s+l.inn, 0);
+  const despesa = linhas.reduce((s,l) => s+l.out, 0);
+  document.getElementById("kpisTx").innerHTML =
+    kpi("Lançamentos", String(linhas.length), "no recorte atual", "lead") +
+    kpi("Entradas", `<span class="pos">${brl.format(receita)}</span>`, linhas.filter(l=>l.inn).length + " lançamentos") +
+    kpi("Saídas", `<span class="neg">${brl.format(despesa)}</span>`, linhas.filter(l=>l.out).length + " lançamentos") +
+    kpi("Ticket médio de saída", brl.format(despesa / (linhas.filter(l=>l.out).length||1)), "por lançamento");
+
+  /* máquina fraca: desenha no máximo 250 linhas por vez */
+  const TETO = 250;
+  const visiveis = linhas.slice().reverse().slice(0, S.txTeto);
+  document.getElementById("txCount").textContent =
+    visiveis.length < linhas.length
+      ? "mostrando " + visiveis.length + " de " + linhas.length + " lançamentos"
+      : linhas.length + " de " + S.todas.length + " lançamentos";
+  const corpo = visiveis.map(l => `<tr>
+    <td class="num">${dataBR(l.data)}</td>
+    <td>${esc(l.desc)}</td>
+    <td>${esc(l.cat)}</td>
+    <td>${esc(l.conta)}</td>
+    <td class="r num pos">${l.inn ? brl2.format(l.inn) : ""}</td>
+    <td class="r num neg">${l.out ? brl2.format(l.out) : ""}</td>
+    <td class="r num">${brl2.format(l.saldo)}</td>
+  </tr>`).join("");
+  document.getElementById("tblTx").innerHTML = linhas.length ? `
+    <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Conta</th>
+    <th class="r">Entrada</th><th class="r">Saída</th><th class="r">Saldo</th></tr></thead>
+    <tbody>${corpo}</tbody>`
+    : `<tbody><tr><td>${vazio()}</td></tr></tbody>`;
+
+  const maisWrap = document.getElementById("txMais");
+  if(visiveis.length < linhas.length){
+    maisWrap.innerHTML = `<button class="btn" id="btnMais" type="button">Mostrar mais ${
+      Math.min(TETO, linhas.length - visiveis.length)} lançamentos</button>`;
+    document.getElementById("btnMais").addEventListener("click", () => {
+      S.txTeto += TETO; CACHE.sujo.transacoes = true; pinta("transacoes");
+    });
+  } else maisWrap.innerHTML = "";
+}
+
+function renderMapa(){
+  const blocos = {receita:"Receita", cmv:"Custo dos serviços", operacional:"Despesas operacionais",
+                  imposto:"Impostos", divida:"Dívidas", investimento:"Investimentos", outras:"Outras saídas"};
+  const porBloco = {};
+  Object.entries(MAPA).forEach(([cat,b]) => { (porBloco[b] = porBloco[b] || []).push(cat); });
+  document.getElementById("tblMapa").innerHTML = `
+    <thead><tr><th>Bloco</th><th>Categorias</th></tr></thead>
+    <tbody>${Object.entries(blocos).map(([k,nome]) => `<tr>
+      <td style="white-space:nowrap">${nome}</td>
+      <td style="color:var(--ink-2)">${(porBloco[k]||["—"]).join(", ")}</td></tr>`).join("")}</tbody>`;
+}
+
+/* =======================================================================
+   6. EVENTOS
+   ======================================================================= */
+document.getElementById("tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if(!b) return;
+  S.view = b.dataset.view;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t === b)));
+  VIEWS.forEach(v => document.getElementById("view-" + v).classList.toggle("hidden", v !== S.view));
+  document.getElementById("filters").classList.toggle("hidden", S.view === "dados" || S.view === "pista");
+  pinta(S.view);
+});
+
+let timer = null;
+const adiado = fn => { clearTimeout(timer); timer = setTimeout(fn, 180); };
+const bind = (id, campo, ev) => document.getElementById(id).addEventListener(ev || "change", e => {
+  S.f[campo] = e.target.value;
+  if(campo === "periodo"){
+    const custom = e.target.value === "custom";
+    document.getElementById("wrapDe").classList.toggle("hidden", !custom);
+    document.getElementById("wrapAte").classList.toggle("hidden", !custom);
+  }
+  S.txTeto = 250;
+  if(ev === "input") adiado(render); else render();
+});
+bind("fPeriodo","periodo"); bind("fDe","de"); bind("fAte","ate");
+bind("fCategoria","cat"); bind("fConta","conta"); bind("fTipo","tipo");
+bind("fBusca","busca","input");
+
+["pCaixa","pReceita","pFolha","pOutros","pCresc"].forEach(id =>
+  document.getElementById(id).addEventListener("input", () => {
+    S.pistaEditada = true; adiado(renderPista);
+  }));
+document.getElementById("btnPistaReset").addEventListener("click", () => {
+  S.pistaEditada = false; sugerePista(); renderPista();
+});
+
+document.getElementById("btnExportar").addEventListener("click", async () => {
+  const linhas = CACHE.linhas;
+  const csv = "DATA,DESCRICAO,CATEGORIA,ENTRADA,SAIDA,CONTA,SALDO\n" +
+    linhas.map(l => [iso(l.data), '"' + l.desc.replace(/"/g,'""') + '"', '"' + l.cat + '"',
+                     l.inn || "", l.out || "", '"' + l.conta + '"', l.saldo.toFixed(2)].join(",")).join("\n");
+  const nome = "machine-bigorna-" + iso(new Date()) + ".csv";
+  const conteudo = "﻿" + csv;
+
+  /* Dentro do visualizador da claude.ai o salvamento passa pela permissão do leitor.
+     Fora dele (arquivo local, GitHub Pages) usa o link comum. */
+  let salvador = null;
+  try { salvador = window.claude && claude.use ? await claude.use("downloads") : null; } catch { salvador = null; }
+  if(salvador){
+    try { await salvador.save({ filename: nome, data: conteudo }); }
+    catch(err){ if(err && err.code !== "declined") console.warn("download recusado:", err.code); }
+    return;
+  }
+  const blob = new Blob([conteudo], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = nome;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+});
+document.getElementById("btnImprimir").addEventListener("click", () => window.print());
+
+document.getElementById("btnLimpar").addEventListener("click", () => {
+  S.f = { periodo:"12", de:S.f.de, ate:S.f.ate, cat:"", conta:"", tipo:"", busca:"" };
+  S.txTeto = 250;
+  document.getElementById("fPeriodo").value = "12";
+  document.getElementById("fCategoria").value = "";
+  document.getElementById("fConta").value = "";
+  document.getElementById("fTipo").value = "";
+  document.getElementById("fBusca").value = "";
+  document.getElementById("wrapDe").classList.add("hidden");
+  document.getElementById("wrapAte").classList.add("hidden");
+  render();
+});
+
+document.getElementById("fSaldoMin").addEventListener("input", e => {
+  S.saldoMin = Math.max(0, +e.target.value || 0);
+  render();
+});
+
+function msg(texto, tipo){
+  document.getElementById("csvMsg").innerHTML =
+    `<div class="alert ${tipo}"><strong>${tipo === "bad" ? "⚠" : "✓"}</strong><div>${esc(texto)}</div></div>`;
+}
+document.getElementById("btnCarregar").addEventListener("click", () => {
+  try{
+    carregar(document.getElementById("csvIn").value, "usuario");
+    msg("CSV carregado: " + S.todas.length + " lançamentos, de " +
+        dataBR(S.todas[0].data) + " a " + dataBR(S.todas[S.todas.length-1].data) + ".", "ok");
+  }catch(err){ msg(err.message, "bad"); }
+});
+document.getElementById("btnArquivo").addEventListener("click", () => document.getElementById("fileIn").click());
+document.getElementById("fileIn").addEventListener("change", e => {
+  const f = e.target.files[0]; if(!f) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    document.getElementById("csvIn").value = fr.result;
+    try{
+      carregar(fr.result, "usuario");
+      msg("Arquivo " + f.name + " carregado: " + S.todas.length + " lançamentos.", "ok");
+    }catch(err){ msg(err.message, "bad"); }
+  };
+  fr.readAsText(f, "utf-8");
+});
+document.getElementById("btnExemplo").addEventListener("click", () => {
+  const ex = geraExemplo();
+  document.getElementById("csvIn").value = ex;
+  carregar(ex, "exemplo");
+  msg("Dados de exemplo restaurados.", "ok");
+});
+document.getElementById("btnBaixar").addEventListener("click", async () => {
+  try{ await navigator.clipboard.writeText(S.csv); msg("CSV copiado para a área de transferência.", "ok"); }
+  catch{ msg("O navegador bloqueou a cópia. Selecione o texto da caixa e copie na mão.", "bad"); }
+});
+
+/* boot */
+const exemplo = geraExemplo();
+document.getElementById("csvIn").value = exemplo;
+carregar(exemplo, "exemplo");
+</script>
+
+</body>
+</html>
